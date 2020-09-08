@@ -6,6 +6,9 @@ import pyshark
 from scapy.all import *
 import time
 
+
+zbee_rout = {}
+
 """
   Parses through the command line arguments to determine which packet to count
 """
@@ -117,15 +120,22 @@ def count_link_status():
       if 'zbee_nwk' in dir(pk):
         zbee = pk.zbee_nwk
         if (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.dst == '0x0000fffc'):
-           """
-             Printing the frame number -> cross reference w/ Wireshark what the packet is
-           """
-           frame = pk.frame_info
-           print(frame.number)
-           count = count + 1
+          """
+            Printing the frame number -> cross reference w/ Wireshark what the packet is
+          """
+          frame = pk.frame_info
+          print(frame.number)
+          count = count + 1
+          """
+            For device mapping - getting all of the zigbee router extended src address
+          """                  
+          if zbee.src64 != '0x0000':
+            print(zbee.src)
+            zbee_rout.add(zbee.src)
     except AttributeError:
       pass
   print('final count ' + str(count))
+  print(zbee_rout)
 
 
 """
