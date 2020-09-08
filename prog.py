@@ -40,37 +40,6 @@ def parse():
   else:
     sys.exit(eror)
   
-"""
-  Counts the number of packets in the file for the given type (packet)
-  Of a CSV file (limited version)
-"""
-def count(packet):
-
-  path = 'test.csv'
-
-  with open(path, 'r') as csvfile:
-    f = csv.reader(csvfile, delimiter=',')
-    count = 0
-    for brak in f:
-      # route request
-      if (brak[0] == '0x00000001') and (brak[1] != '1') and (brak[2] == '0x0000fffc') and (packet == 1):
-        count = count + 1
-        print(brak)
-      # rejoin response
-      elif (brak[0] == '0x00000001') and (brak[1] == '1') and (brak[3] == '4') and (packet == 2):
-        count = count + 1
-        print(brak)
-      # link status
-      elif (brak[0] == '0x00000001') and (brak[1] == '1') and (brak[2] == '0x0000fffc') and (packet == 3):
-        count = count + 1
-        print(brak)
-      # network update
-      elif (brak[0] == '0x00000001') and (brak[3] == '13') and (packet == 4):
-        count = count + 1
-        print(brak)
-      # route reply
-      print(count)
-
 
 """
   Counts the number of rejoin response packets in the pcap file
