@@ -18,21 +18,22 @@ def parse():
     sys.exit(eror)
   elif no == 2:
     option = sys.argv[1]
-    if (option == '--routeRequest') | (option == '--routerequest') | (option == '--RouteRequest'):
-      return count_route_request
-    elif (option == '--rejoinResponse') | (option == '--rejoinresponse') | (option == '--RejoinResponse'):
+    if (option == '--routeRequest') or (option == '--routerequest') or (option == '--RouteRequest'):
+      return count_route_request()
+    elif (option == '--rejoinResponse') or (option == '--rejoinresponse') or (option == '--RejoinResponse'):
       return count_rejoin_response()
-    elif (option == '--linkStatus') | (option == '--linkstatus') | (option == '--LinkStatus'):
+    elif (option == '--linkStatus') or (option == '--linkstatus') or (option == '--LinkStatus'):
       return count_link_status()
-    elif (option == '--networkUpdate') | (option == '--networkupdate') | (option == '--NetworkUpdate'):
-      return 4
-    elif (option == '--routeReply') | (option == '--routereply') | (option == '--RouteReply'):
-      return 5
-    elif (option == '--networkReport') | (option == '--networkreport') | (option == '--NetworkReport'):
-      return 6
-    elif (option == '--endDeviceTimeoutRequest') | (option == '--enddevicetimeoutrequest') | (option == '--EndDeviceTimeoutRequest') | (option == 'edtrequest') | (option == '--edtRequest'):
+    elif (option == '--networkUpdate') or (option == '--networkupdate') or (option == '--NetworkUpdate'):
+      print('network_update')
+      return count_network_update()
+    elif (option == '--routeReply') or (option == '--routereply') or (option == '--RouteReply'):
+      return count_route_reply()
+    elif (option == '--networkReport') or (option == '--networkreport') or (option == '--NetworkReport'):
+      return count_network_report()
+    elif (option == '--endDeviceTimeoutRequest') or (option == '--enddevicetimeoutrequest') or (option == '--EndDeviceTimeoutRequest') or (option == 'edtrequest') or (option == '--edtRequest'):
       return 7
-    elif (option == '--endDeviceTimeoutResponse') | (option == '--enddevicetimeoutresponse') | (option == '--EndDeviceTimeoutResponse') | (option == 'edtresponse') | (option == '--edtResponse'):
+    elif (option == '--endDeviceTimeoutResponse') or (option == '--enddevicetimeoutresponse') or (option == '--EndDeviceTimeoutResponse') or (option == 'edtresponse') or (option == '--edtResponse'):
       return 8
     else:
       sys.exit(eror)
@@ -52,52 +53,23 @@ def count(packet):
     count = 0
     for brak in f:
       # route request
-      if (brak[0] == '0x00000001') & (brak[1] != '1') & (brak[2] == '0x0000fffc') & (packet == 1):
+      if (brak[0] == '0x00000001') and (brak[1] != '1') and (brak[2] == '0x0000fffc') and (packet == 1):
         count = count + 1
         print(brak)
       # rejoin response
-      elif (brak[0] == '0x00000001') & (brak[1] == '1') & (brak[3] == '4') & (packet == 2):
+      elif (brak[0] == '0x00000001') and (brak[1] == '1') and (brak[3] == '4') and (packet == 2):
         count = count + 1
         print(brak)
       # link status
-      elif (brak[0] == '0x00000001') & (brak[1] == '1') & (brak[2] == '0x0000fffc') & (packet == 3):
+      elif (brak[0] == '0x00000001') and (brak[1] == '1') and (brak[2] == '0x0000fffc') and (packet == 3):
         count = count + 1
         print(brak)
       # network update
-      elif (brak[0] == '0x00000001') & (brak[3] == '13') & (packet == 4):
+      elif (brak[0] == '0x00000001') and (brak[3] == '13') and (packet == 4):
         count = count + 1
         print(brak)
       # route reply
       print(count)
-
-
-"""
-  Counts the number of route request packets in the pcap file
-"""
-def count_route_request():
-  path = 'Zigator_all.pcap'
-  shark_cap = pyshark.FileCapture(path)
-  """
-    count should represent how many packets of that type are
-  """
-  count = 0 
-  for pk in shark_cap:
-    """
-      Try because you could get attribute error - a packet w/no zbee layer
-    """
-    try:
-      if 'zbee_nwk' in dir(pk):
-        zbee = pk.zbee_nwk
-        if (zbee.frame_type == '0x00000001') & (zbee.radius == '1') & (zbee.data_len == '4')
-          """
-            Printing the frame number -> cross reference w/ Wireshark what the packet is
-          """
-          frame = pk.frame_info
-          print(frame.number)
-          count = count + 1
-    except AttributeError:
-      pass
-  print('final count ' + str(count))
 
 
 """
@@ -117,7 +89,36 @@ def count_rejoin_response():
     try:
       if 'zbee_nwk' in dir(pk):
         zbee = pk.zbee_nwk
-        if (zbee.frame_type == '0x00000001') & (zbee.radius != '1') & (zbee.dst == '0x0000fffc'):
+        if (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.data_len == '4'):
+          """
+            Printing the frame number -> cross reference w/ Wireshark what the packet is
+          """
+          frame = pk.frame_info
+          print(frame.number)
+          count = count + 1
+    except AttributeError:
+      pass
+  print('final count ' + str(count))
+
+
+"""
+  Counts the number of route request packets in the pcap file
+"""
+def count_route_request():
+  path = 'Zigator_all.pcap'
+  shark_cap = pyshark.FileCapture(path)
+  """
+    count should represent how many packets of that type are
+  """
+  count = 0 
+  for pk in shark_cap:
+    """
+      Try because you could get attribute error - a packet w/no zbee layer
+    """
+    try:
+      if 'zbee_nwk' in dir(pk):
+        zbee = pk.zbee_nwk
+        if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (zbee.dst == '0x0000fffc'):
           """
             Printing the frame number -> cross reference w/ Wireshark what the packet is
           """
@@ -146,7 +147,7 @@ def count_link_status():
     try:
       if 'zbee_nwk' in dir(pk):
         zbee = pk.zbee_nwk
-        if (zbee.frame_type == '0x00000001') & (zbee.radius == '1') & (zbee.dst == '0x0000fffc'):
+        if (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.dst == '0x0000fffc'):
            """
              Printing the frame number -> cross reference w/ Wireshark what the packet is
            """
@@ -157,6 +158,95 @@ def count_link_status():
       pass
   print('final count ' + str(count))
 
+
+"""
+  Counts the number of network update packets in the pcacp file
+"""
+def count_network_update():
+  path = 'Zigator_all.pcap'
+  shark_cap = pyshark.FileCapture(path)
+  """
+    count should represent how many packets of that type are
+  """
+  count = 0 
+  for pk in shark_cap:
+    """
+      Try because you could get attribute error - a packet w/no zbee layer
+    """
+    try:
+        zbee = pk.zbee_nwk
+        if (zbee.frame_type == '0x00000001') and (zbee.data_len == '13'):
+           """
+             Printing the frame number -> cross reference w/ Wireshark what the packet is
+           """
+           frame = pk.frame_info
+           print(frame.number)
+           count = count + 1
+    except AttributeError:
+      pass
+  print('final count ' + str(count))
+
+
+
+"""
+  Counts the number of route reply packets in the pcacp file
+"""
+def count_route_reply():
+  path = 'Zigator_all.pcap'
+  shark_cap = pyshark.FileCapture(path)
+  """
+    count should represent how many packets of that type are
+  """
+  count = 0 
+  for pk in shark_cap:
+    """
+      Try because you could get attribute error - a packet w/no zbee layer
+    """
+    try:
+      if 'zbee_nwk' in dir(pk):
+        zbee = pk.zbee_nwk
+        wpan = pk.wpan
+        if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (wpan.src16 == zbee.src) and (zbee.ext_dst == '1') and ((zbee.data_len == '8') or (zbee.data_len == '16') or (zbee.data_len == '24')):
+           """
+             Printing the frame number -> cross reference w/ Wireshark what the packet is
+           """
+           frame = pk.frame_info
+           print(frame.number)
+           count = count + 1
+    except AttributeError:
+      pass
+  print('final count ' + str(count))
+
+
+
+"""
+  Counts the number of network report packets in the pcacp file
+"""
+def count_network_report():
+  path = 'Zigator_all.pcap'
+  shark_cap = pyshark.FileCapture(path)
+  """
+    count should represent how many packets of that type are
+  """
+  count = 0 
+  for pk in shark_cap:
+    """
+      Try because you could get attribute error - a packet w/no zbee layer
+    """
+    try:
+      if 'zbee_nwk' in dir(pk):
+        zbee = pk.zbee_nwk
+        wpan = pk.wpan
+        if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (zbee.ext_dst == '0') and (zbee.dst == '0x00000000'):
+           """
+             Printing the frame number -> cross reference w/ Wireshark what the packet is
+           """
+           frame = pk.frame_info
+           print(frame.number)
+           count = count + 1
+    except AttributeError:
+      pass
+  print('final count ' + str(count))
 
 
 """
@@ -181,7 +271,7 @@ def read_pcap(packet):
         zbee = pk.zbee_nwk
         #If the packet is a route request packet
         if packet == 1:
-          if (zbee.frame_type == '0x00000001') & (zbee.radius != '1') & (zbee.dst == '0x0000fffc'):
+          if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (zbee.dst == '0x0000fffc'):
             """
               Printing the frame number -> cross reference w/ Wireshark what the packet is
             """
@@ -189,7 +279,7 @@ def read_pcap(packet):
             print(frame.number)
             count = count + 1
         # If the packet is a rejoin response packet
-        elif (zbee.frame_type == '0x00000001') & (zbee.radius == '1') & (zbee.data_len == '4') & (packet == 2):
+        elif (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.data_len == '4') and (packet == 2):
           """
             Printing the frame number -> cross reference w/ Wireshark what the packet is
           """
@@ -198,7 +288,7 @@ def read_pcap(packet):
           count = count + 1
         # If the packet is a link status packet
         elif packet == 3:
-          if (zbee.frame_type == '0x00000001') & (zbee.radius == '1') & (zbee.dst == '0x0000fffc'):
+          if (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.dst == '0x0000fffc'):
              """
                Printing the frame number -> cross reference w/ Wireshark what the packet is
              """
