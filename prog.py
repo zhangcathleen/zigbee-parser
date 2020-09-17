@@ -227,58 +227,6 @@ def count_network_report():
       pass
   print('final count ' + str(count))
 
-
-"""
-  Counts the number of packets of the pcap file
-"""
-def read_pcap(packet):
-  path = 'Zigator_all.pcap'
-  # Reading using scapy
-  #shark_cap = rdpcap('Zigator_all.pcap')
-  # Reading using pyshark
-  shark_cap = pyshark.FileCapture(path)
-  """
-    count should represent how many packets of that type are
-  """
-  count = 0
-  for pk in shark_cap:
-    """
-      Try because you could get attribute error - a packet w/no zbee layer
-    """
-    try:
-      if 'zbee_nwk' in dir(pk):
-        zbee = pk.zbee_nwk
-        #If the packet is a route request packet
-        if packet == 1:
-          if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (zbee.dst == '0x0000fffc'):
-            """
-              Printing the frame number -> cross reference w/ Wireshark what the packet is
-            """
-            frame = pk.frame_info
-            print(frame.number)
-            count = count + 1
-        # If the packet is a rejoin response packet
-        elif (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.data_len == '4') and (packet == 2):
-          """
-            Printing the frame number -> cross reference w/ Wireshark what the packet is
-          """
-          frame = pk.frame_info
-          print(frame.number)
-          count = count + 1
-        # If the packet is a link status packet
-        elif packet == 3:
-          if (zbee.frame_type == '0x00000001') and (zbee.radius == '1') and (zbee.dst == '0x0000fffc'):
-             """
-               Printing the frame number -> cross reference w/ Wireshark what the packet is
-             """
-             frame = pk.frame_info
-             print(frame.number)
-             count = count + 1
-    except AttributeError:
-#      print('pass')
-      pass
-  print('final count ' + str(count))
-
 def main():
 
   start_time = time.clock()
@@ -294,9 +242,6 @@ def main():
   # 8 - end device timeout response
   packet = parse()
   
-  #count(packet)
-#  read_pcap(packet)
-
   print(time.clock() - start_time)
 
 if __name__ == "__main__":
