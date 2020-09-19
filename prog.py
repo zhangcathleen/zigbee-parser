@@ -19,28 +19,22 @@ start_time = 0
 """
 def more_parse():
 
-  eror = '\n\n  OPTIONS:\n       --routeRequest\n       --rejoinResponse\n       --linkStatus\n       --networkUpdate\n       --routeReply\n       --networkReport\n       --endDeviceTimeoutRequest [edtRequest]\n       --endDeviceTimeoutResponse [--edtResponse]\n\n'
+  doc = '\n\n  OPTIONS:\n         routeRequest\n         rejoinResponse\n         linkStatus\n         networkUpdate\n         routeReply\n         networkReport\n         endDeviceTimeoutRequest [edtRequest]\n         endDeviceTimeoutResponse [edtResponse]\n\n         zrg     -print out the addr of routers + coord \n\n  QUIT:\n       Ctrl + C\n\n'
 
-  option = input(eror)
   try:
+    option = input(doc)
     while True:
       if (option == '--routeRequest') or (option == '--routerequest') or (option == '--RouteRequest') or (option == 'routeRequest') or (option == 'routerequest') or (option == 'RouteRequest'):
-        print("\nanalyzing for route request packets\n")
         return count_route_request()
       elif (option == '--rejoinResponse') or (option == '--rejoinresponse') or (option == '--RejoinResponse') or (option == 'rejoinResponse') or (option == 'rejoinresponse') or (option == 'RejoinResponse'):
-        print("\nanalyzing for rejoin response packets\n")
         return count_rejoin_response()
       elif (option == '--linkStatus') or (option == '--linkstatus') or (option == '--LinkStatus') or (option == 'linkStatus') or (option == 'linkstatus') or (option == 'LinkStatus'):
-        print("\nanalyzing for link status packets\n")
         return count_link_status()
       elif (option == '--networkUpdate') or (option == '--networkupdate') or (option == '--NetworkUpdate') or (option == 'networkUpdate') or (option == 'networkupdate') or (option == 'NetworkUpdate'):
-        print("\nanalyzing for network update packets\n")
         return count_network_update()
       elif (option == '--routeReply') or (option == '--routereply') or (option == '--RouteReply') or (option == 'routeReply') or (option == 'routereply') or (option == 'RouteReply'):
-        print("\nanalyzing for route reply packets\n")
         return count_route_reply()
       elif (option == '--networkReport') or (option == '--networkreport') or (option == '--NetworkReport') or (option == 'networkReport') or (option == 'networkreport') or (option == 'NetworkReport'):
-        print("\nanalyzing network report packets\n")
         return count_network_report()
       elif (option == '--endDeviceTimeoutRequest') or (option == '--enddevicetimeoutrequest') or (option == '--EndDeviceTimeoutRequest') or (option == 'edtrequest') or (option == '--edtRequest') or (option == 'endDeviceTimeoutRequest') or (option == 'enddevicetimeoutrequest') or (option == 'EndDeviceTimeoutRequest') or (option == 'edtRequest'):
         print("\nanalyzing end device timeout request packets\n")
@@ -48,44 +42,37 @@ def more_parse():
       elif (option == '--endDeviceTimeoutResponse') or (option == '--enddevicetimeoutresponse') or (option == '--EndDeviceTimeoutResponse') or (option == 'edtresponse') or (option == '--edtResponse') or (option == 'endDeviceTimeoutResponse') or (option == 'enddevicetimeoutresponse') or (option == 'EndDeviceTimeoutResponse') or (option == 'edtResponse'):
         print("\nanalyzing end device timeout response packets\n")
         return 8
+      elif (option == 'zrg') or (option == 'ZRG') or (option == 'zRG') or (option == 'zrG') or (option == 'Zrg') or (option == 'ZRg') or (option == 'ZrG'):
+        return print_zrg()
       else:
-        option = input(eror)
+        option = input(doc)
   except KeyboardInterrupt:
-    sys.exit("\n\nexiting program\nbye!")
+    sys.exit("\n\nexiting program\nbye!\n")
 
 """
   Parses through the command line arguments to determine which packet to count
 """
 def parse():
 
-  eror = '\n  usage: ./prog.py [OPTION]\n\n  OPTIONS:\n       --routeRequest\n       --rejoinResponse\n       --linkStatus\n       --networkUpdate\n       --routeReply\n       --networkReport\n       --endDeviceTimeoutRequest [edtRequest]\n       --endDeviceTimeoutResponse [--edtResponse]\n'
   no = len(sys.argv)
 
   if no == 2:
     option = sys.argv[1]
     if (option == '--routeRequest') or (option == '--routerequest') or (option == '--RouteRequest'):
-      print("\nanalyzing for route request packets\n")
       return count_route_request()
     elif (option == '--rejoinResponse') or (option == '--rejoinresponse') or (option == '--RejoinResponse'):
-      print("\nanalyzing for rejoin response packets\n")
       return count_rejoin_response()
     elif (option == '--linkStatus') or (option == '--linkstatus') or (option == '--LinkStatus'):
-      print("\nanalyzing for link status packets\n")
       return count_link_status()
     elif (option == '--networkUpdate') or (option == '--networkupdate') or (option == '--NetworkUpdate'):
-      print("\nanalyzing for network update packets\n")
       return count_network_update()
     elif (option == '--routeReply') or (option == '--routereply') or (option == '--RouteReply'):
-      print("\nanalyzing for route reply packets\n")
       return count_route_reply()
     elif (option == '--networkReport') or (option == '--networkreport') or (option == '--NetworkReport'):
-      print("\nanalyzing network report packets\n")
       return count_network_report()
     elif (option == '--endDeviceTimeoutRequest') or (option == '--enddevicetimeoutrequest') or (option == '--EndDeviceTimeoutRequest') or (option == 'edtrequest') or (option == '--edtRequest'):
-      print("\nanalyzing end device timeout request packets\n")
       return 7
     elif (option == '--endDeviceTimeoutResponse') or (option == '--enddevicetimeoutresponse') or (option == '--EndDeviceTimeoutResponse') or (option == 'edtresponse') or (option == '--edtResponse'):
-      print("\nanalyzing end device timeout response packets\n")
       return 8
     else:
       more_parse()
@@ -108,13 +95,14 @@ def start():
   Ouputs the time elapsed
 """
 def finish():
-  print(start_time)
+  #print(start_time)
   print(f"time it took to run this command: {(time.clock() - start_time)/60} min")
 
 """
   Counts the number of rejoin response packets in the pcap file
 """
 def count_rejoin_response():
+  print("\nanalyzing for rejoin response packets\n")
   path = 'Zigator_all.pcap'
   shark_cap = pyshark.FileCapture(path)
   """
@@ -144,6 +132,7 @@ def count_rejoin_response():
   Counts the number of route request packets in the pcap file
 """
 def count_route_request():
+  print("\nanalyzing for route request packets\n")
   path = 'Zigator_all.pcap'
   shark_cap = pyshark.FileCapture(path)
   """
@@ -171,8 +160,11 @@ def count_route_request():
 
 """
   Counts the number of link status packets in the pcap file
+  Dst : 0xfffc
+  Src : zig_coordinator + zig_router
 """
 def count_link_status():
+  print("\nanalyzing for link status packets\n")
   start()
   path = 'Zigator_all.pcap'
   shark_cap = pyshark.FileCapture(path)
@@ -202,9 +194,15 @@ def count_link_status():
           if zbee.src != '0x00000000':
             print(zbee.src)
             zbee_rc.add(zbee.src)
+    print('final count ' + str(count))
+    print("zbee routers + coordinators : ", end = " ")
+    print(zbee_rc)
+    finish()
+    more_parse()
   except KeyboardInterrupt:
-    print("INTERRRUPPTEDDDD")
+    print("\n\nINTERRRUPPTEDDDD")
     print(f"Count up to the previous number: {count}")
+    print("zbee routers + coordinators : ", end = " ")
     print(zbee_rc)
     finish()
     more_parse()
@@ -212,6 +210,7 @@ def count_link_status():
     pass
   else:
     print('final count ' + str(count))
+    print("zbee routers + coordinators : ", end = " ")
     print(zbee_rc)
     finish()
     more_parse()
@@ -221,6 +220,7 @@ def count_link_status():
   Counts the number of network update packets in the pcacp file
 """
 def count_network_update():
+  print("\nanalyzing for network update packets\n")
   path = 'Zigator_all.pcap'
   shark_cap = pyshark.FileCapture(path)
   """
@@ -252,17 +252,18 @@ def count_network_update():
   Source = ZC || ZR
 """
 def count_route_reply():
+  print("\nanalyzing for route reply packets\n")
   path = 'Zigator_all.pcap'
   shark_cap = pyshark.FileCapture(path)
   """
-    count should represent how many packets of that type are
+    Try because you could get attribute error - a packet w/no zbee layer
   """
-  count = 0 
-  for pk in shark_cap:
+  try:
     """
-      Try because you could get attribute error - a packet w/no zbee layer
+      count should represent how many packets of that type are
     """
-    try:
+    count = 0 
+    for pk in shark_cap:
       if 'zbee_nwk' in dir(pk):
         zbee = pk.zbee_nwk
         wpan = pk.wpan
@@ -273,9 +274,21 @@ def count_route_reply():
            frame = pk.frame_info
            print(frame.number)
            count = count + 1
-    except AttributeError:
-      pass
-  print('final count ' + str(count))
+  except KeyboardInterrupt:
+    print("\n\nINTERRRUPPTEDDDD")
+    print(f"Count up to the previous number: {count}")
+    print("zbee routers + coordinators : ", end = " ")
+    print(zbee_rc)
+    finish()
+    more_parse()
+  except AttributeError:
+    pass
+  else:
+    print('final count ' + str(count))
+    print("zbee routers + coordinators : ", end = " ")
+    print(zbee_rc)
+    finish()
+    more_parse()
 
 
 
@@ -283,6 +296,7 @@ def count_route_reply():
   Counts the number of network report packets in the pcacp file
 """
 def count_network_report():
+  print("\nanalyzing network report packets\n")
   path = 'Zigator_all.pcap'
   shark_cap = pyshark.FileCapture(path)
   """
