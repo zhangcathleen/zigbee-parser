@@ -18,7 +18,13 @@ import time
 
 # network_report + link_status + route_reply
 zbee_r = {"hi"}
+
+# network update
+zbee_c = {"hi"}
+
 start_time = 0
+
+
 
 # more_parse ------------------------------------------------------------------------
 
@@ -80,6 +86,7 @@ def parse():
     elif (option == '--linkStatus') or (option == '--linkstatus') or (option == '--LinkStatus'):
       return count_link_status()
     elif (option == '--networkUpdate') or (option == '--networkupdate') or (option == '--NetworkUpdate'):
+      print("reached")
       return count_network_update()
     elif (option == '--routeReply') or (option == '--routereply') or (option == '--RouteReply'):
       return count_route_reply()
@@ -93,9 +100,6 @@ def parse():
       more_parse()
   else:
     more_parse()
-
-
-
 
 
 """
@@ -250,6 +254,8 @@ def count_link_status():
 
 """
   Counts the number of network update packets in the pcacp file
+  dst : 0xfffc
+  src : zc
 """
 def count_network_update():
   print("\nanalyzing for network update packets\n")
@@ -259,22 +265,35 @@ def count_network_update():
     count should represent how many packets of that type are
   """
   count = 0 
-  for pk in shark_cap:
-    """
-      Try because you could get attribute error - a packet w/no zbee layer
-    """
-    try:
-        zbee = pk.zbee_nwk
-        if (zbee.frame_type == '0x00000001') and (zbee.data_len == '13'):
-           """
-             Printing the frame number -> cross reference w/ Wireshark what the packet is
-           """
-           frame = pk.frame_info
-           print(frame.number)
-           count = count + 1
-    except AttributeError:
-      pass
-  print('total count ' + str(count))
+  """
+    Try because you could get attribute error - a packet w/no zbee layer
+  """
+  try:
+    for pk in shark_cap:
+      zbee = pk.zbee_nwk
+      if (zbee.frame_type == '0x00000001') and (zbee.data_len == '13'):
+        """
+          Printing the frame number -> cross reference w/ Wireshark what the packet is
+        """
+        frame = pk.frame_info
+        count = count + 1
+        print(f"zbee.src {zbee.src} + zbee.src64 {zbee.src64}")
+        zbee_c.add(zbee.src64)
+  except KeyboardInterrupt:
+    print("\n\nINTERRRUPPTEDDDD")
+    print(f"number of network update packets up to the previous number: {count}")
+    print(f"zbee coordinators [{len(zbee_c) - 1}] : ", end = " ")
+    print(zbee_c)
+    finish()
+    more_parse()
+  except AttributeError:
+    pass
+  else:
+    print(f"total number of network update packets : str(count)")
+    print(f"zbee coordinators [{len(zbee_c) - 1}] : ", end = " ")
+    print(zbee_c)
+    finish()
+    more_parse()
 
 # count_route_reply ------------------------------------------------------------------------
 
