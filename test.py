@@ -5,7 +5,7 @@ import sys
 x = 0
 a = {1, 2, 3}
 b = 3
-c = set((3))
+#c = set((3))
 
 """
 def a():
@@ -23,10 +23,20 @@ else:
     print("no exceps caught")
 """
 
-ca = c.isdisjoint(a)
-ac = a.isjoint(c)
-#print(f"{1, 2, 3} is disjoint from 3? {a.isdisjoint(b)}")
-print(f"{3} is disjoint from {1, 2, 3}? ")
-print(ca)
-print(f"{1, 2, 3} is disjoint from {3}? ")
-print(ac)
+#ca = c.isdisjoint(a)
+#ac = a.isjoint(c)
+##print(f"{1, 2, 3} is disjoint from 3? {a.isdisjoint(b)}")
+#print(f"{3} is disjoint from {1, 2, 3}? ")
+#print(ca)
+#print(f"{1, 2, 3} is disjoint from {3}? ")
+#print(ac)
+
+while x < 10:
+  if x == 5:
+    pass
+  elif x== 7:
+    continue
+  elif x == 9:
+    break
+  x = x+1
+  print(x)
