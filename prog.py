@@ -23,8 +23,12 @@ zbee_r = {"hi"}
 zbee_c = {"hi"}
 
 # route request + network status + leave + route record + rejoin request
-# what is leftover from the stuff
-zbee_zed = {"hi"}
+# what is leftover - not zbee routers or coordinators
+not_coord = {"hi"}
+
+# what are the end device srcs
+# done in print_zed()
+zbee_z = {"hi"}
 
 start_time = 0
 
@@ -38,7 +42,7 @@ done = {""}
 """
 def more_parse():
 
-  doc = '\n\n  OPTIONS:\n         routeRequest\n         rejoinResponse\n         linkStatus\n         networkUpdate\n         routeReply\n         networkReport\n         endDeviceTimeoutRequest [edtRequest]\n         endDeviceTimeoutResponse [edtResponse]\n\n         zc      -print out the addr of zigbee coordators\n\n         zr      -print out the addr of zigbee routers\n\n  STOP:\n       Ctrl + C\n\n   QUIT:\n      use quit to exit\n\n'
+  doc = "\n====================\n====================\n  OPTIONS:\n         routeRequest\n         rejoinResponse\n         linkStatus\n         networkUpdate\n         routeReply\n         networkReport\n         endDeviceTimeoutRequest [edtRequest]\n         endDeviceTimeoutResponse [edtResponse]\n\n         zc      -print out the extended addr of zigbee coordators\n\n         zr      -print out the short addr of zigbee routers\n\n         zed     -print out the short addr of zigbee end devices\n\n  STOP:\n       Ctrl + C\n\n   QUIT:\n      use quit to exit\n====================\n====================\n\n"
 
   try:
     while True:
@@ -65,8 +69,11 @@ def more_parse():
         print_zr()
       elif (option == 'zc') or (option == 'ZC') or (option == 'zC') or (option == 'Zc'):
         print_zc()
+      elif (option == 'zed') or (option == 'zeD') or (option == 'zEd') or (option == 'zED') or (option == 'ZED') or (option == 'ZEd') or (option == 'ZeD'):
+        print_zed()
       elif (option == 'quit'):
-        sys.exit("\n\nexiting program\nbye!\n")
+        print("\n\nexiting program\nbye!\n")
+        sys.exit()
       else:
         option = input(doc)
   except KeyboardInterrupt:
@@ -130,11 +137,32 @@ def finish():
   #print(start_time)
   print(f"time it took to run this command: {(time.clock() - start_time)/60} min")
 
+# print_zed ------------------------------------------------------------------------
+
+
+"""
+  Output the current zigbee addresses that are thought to be zigbee end devices
+"""
+def print_zed():
+  global zbee_z
+  if len(zbee_r) > 1:
+    zed = not_coord.difference(zbee_r)
+    zbee_z = zbee_z.union(zed)
+    print("\n\n=======")
+    print("zigbee end devices [so far]:")
+    print(zbee_z)
+    print("======\n\n")
+    not_coord.clear()
+  else:
+    print("\n\n=======")
+    print("not enough information\nrun some more tests please")
+    print("======\n\n")
+
 # print_zr ------------------------------------------------------------------------
 
 
 """
-  Outputs the current zigbee addresses that are thought to be the zigbee router
+  Outputs the current zigbee addresses that are thought to be zigbee routers
 """
 def print_zr():
   print("\n\n=======")
@@ -146,7 +174,7 @@ def print_zr():
 
 
 """
-  Outputs the current zigbee addresses that are thought to be the zigbee coordinator
+  Outputs the current zigbee addresses that are thought to be zigbee coordinators
 """
 def print_zc():
   print("\n\n=====")
@@ -212,10 +240,12 @@ def count_rejoin_response():
 
 
 # count_route_request ------------------------------------------------------------------------
-#TODO: get the destination + source
+
 
 """
   Counts the number of route request packets in the pcap file
+  src : zc, zr, zed
+  dest : 0xfffc
 """
 def count_route_request():
   print("\nanalyzing for route request packets\n")
@@ -224,24 +254,50 @@ def count_route_request():
   """
     count should represent how many packets of that type are
   """
-  count = 0 
-  for pk in shark_cap:
-    """
-      Try because you could get attribute error - a packet w/no zbee layer
-    """
-    try:
-      if 'zbee_nwk' in dir(pk):
-        zbee = pk.zbee_nwk
-        if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (zbee.dst == '0x0000fffc'):
-          """
-            Printing the frame number -> cross reference w/ Wireshark what the packet is
-          """
-          frame = pk.frame_info
-          print(frame.number)
-          count = count + 1
-    except AttributeError:
-      pass
-  print('total count ' + str(count))
+  count = 0
+  try:
+    for pk in shark_cap:
+      """
+        Try because you could get attribute error - a packet w/no zbee layer
+      """
+      try:
+        if 'zbee_nwk' in dir(pk):
+          zbee = pk.zbee_nwk
+          if (zbee.frame_type == '0x00000001') and (zbee.radius != '1') and (zbee.dst == '0x0000fffc'):
+            """
+              Printing the frame number -> cross reference w/ Wireshark what the packet is
+            """
+            frame = pk.frame_info
+            print(frame.number)
+            count = count + 1
+            # if this is a zigbee coordinator
+            if zbee.src == '0x00000000':
+              zbee_c.add(zbee.src64)
+            # a zigbee coord or zigbee end device
+            else:
+              not_coord.add(zbee.src)
+      except AttributeError:
+        pass
+  except KeyboardInterrupt:
+    print("\n\n==INTERRRUPPTEDDDD==\n")
+    print(f"number of route request packets up to the previous number: {count}")
+    '''
+    print(f"zbee routers [{len(zbee_r) - 1}] : ", end = " ")
+    print(zbee_r)
+    '''
+    finish()
+    more_parse()
+  else:
+    print(f"total number of rejoin response packets : {count}")
+    '''
+    not stating the number of zbee routers here bc there isn't a separation between the zbee routers + end devices
+    print(f"zbee routers [{len(zbee_r) - 1}] : ", end = " ")
+    print(zbee_r)
+    '''
+    finish()
+    # to help understand what commands have already been called
+    done.add("route request")
+    more_parse()
 
 # count_link_status ------------------------------------------------------------------------
 
