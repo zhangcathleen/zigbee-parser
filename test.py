@@ -31,12 +31,19 @@ else:
 #print(f"{1, 2, 3} is disjoint from {3}? ")
 #print(ac)
 
-while x < 10:
-  if x == 5:
-    pass
-  elif x== 7:
-    continue
-  elif x == 9:
-    break
-  x = x+1
-  print(x)
+#while x < 10:
+#  if x == 5:
+#    pass
+#  elif x== 7:
+#    continue
+#  elif x == 9:
+#    break
+#  x = x+1
+#  print(x)
+
+
+apple = {1:'a', 2:'b', 3:'c'}
+print(list(apple.keys()))
+for seed, core in apple.items():
+  print(seed)
+  print(core)
