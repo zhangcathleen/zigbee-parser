@@ -32,7 +32,6 @@ def start():
   Ouputs the time elapsed
 '''
 def finish():
-  #print(start_time)
   print(f"\n\n========\ntime it took to run this command: {(time.clock() - start_time)/60} min\n========\n")
 
 # parse ------------------------------------------------------------------------
@@ -72,6 +71,19 @@ def parse():
 
   # most recent device announcement - wpan MAC
   last_da = ""
+
+  # mapping the network id w/ mac address
+  # network id : mac address
+  network_mac = {} 
+
+  # mapping the time_epoch and [dst, src] of the leave packet
+  # to check w the next rejoin response w/in 1 min :
+  # if not = leave packet
+  leave_pak = {}
+
+  # frames that might be leave packets, but need the ZED
+  # maps network_id : mac_id
+  leave_zed = {}
   
   link_status = 0
   network_update = 0
@@ -110,6 +122,7 @@ def parse():
     try:
       for pk in shark_cap:
         frame = pk.frame_info
+#        print(frame.time)
 #       if int(frame.number) % 1000 == 0:
 #         print(f"{frame.number}\n\n ")
 #       else:
@@ -135,20 +148,35 @@ def parse():
                 
                 #  ===== link status packets ============
                 #  Dst : 0xfffc
-                #  Src : zig_coordinator + zig_router
+                #  Src : zc, zr 
                 if zbee.dst == '0x0000fffc':
                   link_status = link_status + 1
                   
                   if zbee.src != '0x00000000':
                     zbee_r.add(zbee.src)
-                  else:
+                  elif zbee.src == '0x00000000':
                     zbee_c.add(zbee.src64)
+
+                  if zbee.src64:
+                    network_mac[f'{zbee.src}'] = f'{zbee.src64}'
                  
                 # ====== rejoin response packets =======
                 # dst : zr, zed
                 # src : zc, zr
                 if zbee.data_len == '4':
                   rejoin_response = rejoin_response + 1
+                  
+                  # for the leave packet - if this is true:
+                  # not a leave packet
+                  if leave_pak:
+                    for time, ip in leave_pak:
+                      if (zbee.src == ip[0]):
+                        if (zbee.dst == ip[1]):
+                          if (frame.time_epoch - time <= 60):
+                            leave_pak.pop(time)
+                          elif (frame.time_epoch - time > 60):
+                            leave = leave + 1
+                            leave_pak.pop(time)
                   
                   if zbee.src != '0x00000000':
                     zbee_r.add(zbee.src)
@@ -166,6 +194,21 @@ def parse():
                   # src : zr + zed
                   if (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff') and (zbee.src != '0x00000000'):
                     rr_pak.add()
+                  
+                  # ===== leave packets ===========
+                  # dst : zc, zr, zed, 0xfffd
+                  # src : zc, zr, zed
+                  if (zbee.dst == '0x0000fffd'): # #1
+                    leave = leave + 1
+                  elif (zbee.dst != '0x0000fffc'):
+                    if (zbee.src == '0x00000000'): # #2
+                      leave = leave + 1
+                    else: # #3
+                      leave_pak[frame.time_epoch] = (zbee.dst, zbee.src)
+                  elif (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000ffff') and (zbee.dst != '0x00000000'): # #1
+                    print(zbee.dst)
+                    print(f'dst64 {zbee.dst64}')
+                    leave_zed[zbee.dst] = zbee.dst64
                 
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
               # ~~~~~~~ DATA.LEN == 13 ~~~~~~~~~~
@@ -186,7 +229,7 @@ def parse():
               # request src : zed
               # response dst : zed
               # response : zc, zr
-              if ('3' == zbee.data_len):
+              if (zbee.data_len == '3'):
 #                print(f'{zbee.src} {zbee.dst}')
                 edt_pak[zbee.src] = zbee.dst
               
@@ -292,13 +335,14 @@ def parse():
                     if zbee.dst != '0x0000fffd':
                       if zbee.dst != '0x00000000':
                         zbee_red.add(zbee.dst)
-                    elif zbee.dst == '0x00000000':
-                      zbee_c.add(zbee.dst64)
+                      elif zbee.dst == '0x00000000':
+                        zbee_c.add(zbee.dst64)
 
                   else:
 #                    print(f"{frame.number} : {zbee.dst}")
 #                    print(f'network status zbee.dst zed {zbee.dst64}')
-                    ns_pak[frame.number] = zbee.dst64
+                    # added for if zbee_nwk.dst == zed
+                    ns_pak[frame.number] = zbee.dst
                 
                 if (zbee.data_len == '4'):
 #                  print(f'network status wpan mac last_da : {last_da} || wpan.src64 : {wpan.src64}')
@@ -382,33 +426,109 @@ def parse():
       # last requirement of network status
     except KeyboardInterrupt:
       print("\n\nINTERRRUPPTEDDDD")
+      
 
     zbee_ed = zbee_red.difference(zbee_r)
  
-    print('edt')   
-    print(edt_pak)
+#    print('edt')   
+#    print(edt_pak)
     # separating between edt request + response
     for src, dst in edt_pak.items():
 #      print(f'{src} {dst}')
       if (dst == '0x00000000') or (dst in zbee_r):
-        print(f'edt dst {dst}')
+#        print(f'edt dst {dst}')
         edt_request = edt_request + 1
       elif (src == '0x00000000') or (src in zbee_r):
-        print(f'edt src {src}')
+#        print(f'edt src {src}')
         edt_response = edt_response + 1
       
 
-
-    # I DONT KNOWWWWWW
 #    print (f"\n\nlast network status\n\n{ns_pak}\n{zbee_ed}")
-    for pkt in ns_pak:
+    for nid in ns_pak:
 #      print(f"packet destination : {pkt}")
-      if pkt in zbee_ed:
+      if nid in zbee_ed:
         network_status = network_status + 1
+
+    # checking if the leave dst is an end device 
+    # if yes:
+    #   add 1 to leave
+    #   add to network_mac[src] = mac
+    print(leave_zed)
+    for nid, mac in leave_zed.items():
+      if nid in zbee_ed:
+        print(nid)
+        leave = leave + 1
+        network_mac[nid] = mac
+
+    print(f'network_id : [mac]\n{network_mac}')
+    mac_network = {}
+    for network, mac in network_mac.items():
+      try:
+        mac_network[mac].add(network)
+      except KeyError:
+        mac_network[mac] = {network}
+
+    c_zbee = {}
+    nm_copy = network_mac
+    for c in zbee_c:
+      for nip, mac in network_mac.items():
+        if mac == c:
+          try:
+            c_zbee[mac].add(nip)
+          except KeyError:
+            c_zbee[mac] = {nip}
+          nm_copy.pop(nip)
+  
+    network_mac = nm_copy
+
+    r_zbee = {}
+    for r in zbee_r:
+      for nip, mac in network_mac.items():
+        if nip == r:
+          try:
+            r_zbee[mac].add(nip)
+          except KeyError:
+            r_zbee[mac] = {nip}
+          nm_copy.pop(nip)
+    
+    network_copy = nm_copy
+
+    ed_zbee = {}
+    for ed in zbee_ed:
+      for nip, mac in network_mac.items():
+        if nip == ed:
+          try:
+            ed_zbee[mac].add(nip)
+          except KeyError:
+            ed_zbee[mac] = {nip}
+          nm_copy.pop(nip)
+
+    print(len(nm_copy))
+      
+    
+    
     finish()
-    print(f"\n========\nzbee router addresses : {zbee_r}\n========\n")
-    print(f"\n========\nzbee coordinator addresses : {zbee_c}\n========\n")
-    print(f"\n========\nzbee end devices addresses : {zbee_ed}\n========\n")
+#    print(f"\n========\nzbee router addresses : {zbee_r}\n========\n")
+#    print(f"\n========\nzbee coordinator addresses : {zbee_c}\n========\n")
+#    print(f"\n========\nzbee end devices addresses : {zbee_ed}\n========\n")
+#    print(f'mac : [network_id]\n{mac_network}')
+    print(c_zbee)
+    print(r_zbee)
+    print(ed_zbee)
+
+    print("\n\nzbee coordinator addresses:")
+    for c in zbee_c:
+      print(f"     {c}")
+
+    print("\n\nzbee router addresses:")
+    for r in zbee_r:
+      print(f"     {r}")
+
+    print("\n\nzbee end devices addresses:")
+    for ed in zbee_ed:
+      print(f"     {ed}")
+
+    print("\n\n\n")
     print(f"number of rejoin response packets : {rejoin_response}")
     print(f"number of network report packets : {network_report}")
     print(f"number of route reply packets : {route_reply}")
