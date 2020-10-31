@@ -42,8 +42,21 @@ else:
 #  print(x)
 
 
-apple = {1:'a', 2:'b', 3:'c'}
-print(list(apple.keys()))
-for seed, core in apple.items():
-  print(seed)
-  print(core)
+#apple = {1:'a', 2:'b', 3:'c'}
+#print(list(apple.keys()))
+#for seed, core in apple.items():
+#  print(seed)
+#  print(core)
+
+test1 = {"hi" : ("yes", "no")}
+test2 = {"hi2" : "yes2"}
+
+a = "hi"
+
+test1[f'{a}'] = 
+
+for k, v in test1.items():
+  print(f'key {k} : val {type(v)}')
+
+for k, v in test2.items():
+  print(f'key {k} : val {type(v)}')

@@ -73,10 +73,14 @@ def parse():
   # network id : mac address
   network_mac = {} 
 
-  # mapping the time_epoch : (src, dst) of the rejoin request packet
+  # mapping the time_epoch : (src, (dst, dst64)) of the rejoin request packet
   # need to check w the next rejoin response w/in 1 min :
   # if yes = rejoin request packet
   rejoin_request_pak = {}
+
+  # frames that might be rejoin request pakcets, but need to not be zed
+  # maps network_id : mac id
+  rejoin_request_zed = {}
   
   # mapping the time_epoch and (src, dst) of the leave packet
   # to check w the next rejoin response w/in 1 min :
@@ -174,8 +178,8 @@ def parse():
                 if zbee.data_len == '4':
                   rejoin_response = rejoin_response + 1
                   
-                  # for the leave packet - if this is true:
-                  # not a leave packet
+                  # for the leave packet
+                  # if true : not a leave packet
                   if leave_pak:
                     for time, ip in leave_pak.items():
                       if (zbee.src == ip[1]):
@@ -185,8 +189,24 @@ def parse():
                           elif (float(frame.time_epoch) - float(time) > 60): # a leave packet
 #                            leave = leave + 1
                             leave_packets[time] = ip
-                  leave_pak = {}
+                    leave_pak = {}
 #                  print(f'leave_pak : {leave_pak}')
+
+
+                  # for the rejoin request packets
+                  # if true : a rejoin request packet
+                  if rejoin_request_pak:
+                    for time, ip in rejoin_request_pak.items():
+                      if (zbee.src == ip[1]):
+                        if (zbee.dst == ip[0]):
+                          print(f'post leave {rejoin_request_pak}')
+                          if (float(frame.time_epoch) - float(time) <= 60): # a rejoin request!
+                            print('more rejoin requests?')
+                            rejoin_request = rejoin_request + 1
+#                            rejoin_request_zed[old_dst[0]] = old_dst[1]
+                          elif (float(frame.time_epoch) - float(time) > 60): # not a rejoin request
+                            continue
+                    rejoin_request_pak = {}
 
                   if zbee.src != '0x00000000':
                     zbee_r.add(zbee.src)
@@ -207,13 +227,13 @@ def parse():
 #                  elif (int(frame.number) == 354):
 #                    print(f'{zbee.data_len}')
                   if (zbee.dst == '0x0000fffd'): # #1
-                    if (frame.number == '354'):
-                      print(f'{zbee.dst}')
-                    print(f'leave_1 {frame.number}')
+#                    if (frame.number == '354'):
+#                      print(f'{zbee.dst}')
+#                    print(f'leave_1 {frame.number}')
                     leave_1 = leave_1 + 1
                   elif (zbee.dst != '0x0000fffc'):
-                    if (frame.number == '354'):
-                      print(f'{zbee.dst}')
+#                    if (frame.number == '354'):
+#                      print(f'{zbee.dst}')
                     if (zbee.src == '0x00000000'): # #2
                       leave_2 = leave_2 + 1
                     else: # #3
@@ -225,14 +245,18 @@ def parse():
                 
                  # ===== rejoin request packets =======
                  # dst : zc, zr
-                 # src : zr. zed
-                  if (zbee.src != '0x00000000'):
-                    if (frame.number == '354'):
-                      print(f'rejoin request')
-                    if (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
-                      rejoin_request_pak[frame.time_epoch] = (zbee.dst, zbee.src)
-                    else: # zbee_nwk.dst != ZED
-                      rejoin_request_zed[zbee.dst] = zbee.dst64
+                 # src : zr, zed
+                  if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
+#                     print(zbee.dst)
+                     #print(zbee.dst64)
+                     #dst = (zbee.dst, zbee.dst64)
+                     #print(f'dst: {dst}\nrejion_request_pak : {rejoin_request_pak}')
+                     #rejoin_request_pak[f'{frame.time_epoch}'] = {f'{zbee.src}' : dst} # has potential ZED
+                     rejoin_request_pak[f'{frame.time_epoch}'] = (f'{zbee.src}', f'{zbee.dst}') # has potential ZED
+#                     print(f'possible rejoin request? {rejoin_request_pak}')
+#                    else: # zbee_nwk.dst != ZED
+#                      rejoin_request_pak[frame.time_epoch] = (zbee.src, (zbee.dst, zbee.dst64))
+#                      #rejoin_request_zed[zbee.dst] = zbee.dst64
 
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
               # ~~~~~~~ DATA.LEN == 13 ~~~~~~~~~~
@@ -248,15 +272,33 @@ def parse():
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
               # ~~~~~ DATA.LEN == 3 ~~~~~~~~~~~~
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ===== end device timeout request or response =======
+              # ===== end device timeout request =======
               # request dst : zc, zr
               # request src : zed
-              # response dst : zed
-              # response : zc, zr
-              if (zbee.data_len == '3'):
+              if (zbee.data_len == '3') and (zbee.dst == '0x00000000') and (zbee.dst in zbee_r):
 #                print(f'{zbee.src} {zbee.dst}')
                 edt_pak[zbee.src] = zbee.dst
+                zbee_ed.add(zbee.src)
+                print(f'request before {edt_request}')
+                edt_request = edt_request + 1
+                print(f'request after {edt_request}')
+                
+                if zbee.src64:
+                  network_mac[f'zbee.src'] = f'zbee.src64'
+
+              # ===== end device timeout response =======
+              # response dst : zed
+              # response : zc, zr
+              if (zbee.data_len == '3') and (zbee.src == '0x00000000') and (zbee.src in zbee_r):
+#                print(f'{zbee.src} {zbee.dst}')
+                #edt_pak[zbee.src] = zbee.dst
+                zbee_ed.add(zbee.dst)
+                print(f'response before {edt_response}')
+                edt_response = edt_response + 1
+                print(f'response after {edt_response}')
               
+                if zbee.dst64:
+                  network_mac[f'zbee.dst'] = f'zbee.dst64'
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
               # ~~~~~~~ ZBEE. RADIUS != 1 ~~~~~~
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -490,6 +532,24 @@ def parse():
     leave_3 = leave_3 + len(leave_pak)
     print(f'leave_packet : {leave_packets}')
 
+#    # check if the rejoin_request_zed is an end device
+#    # if yes:
+#    #   skip
+#    # if no:
+#    #   add 1 to rejoin request
+#    #   add to network_mac[network id] = mac
+#    for nid, mac in rejoin_request_zed.items():
+#      if nid in zbee_ed:
+#        continue
+#      else:
+#        rejoin_request = rejoin_request + 1
+#        network_mac[nid] = mac
+
+
+
+
+
+    # swapping network : mac -> mac : network
     print(f'network_id : [mac]\n{network_mac}')
     mac_network = {}
     for network, mac in network_mac.items():
@@ -497,6 +557,8 @@ def parse():
         mac_network[mac].add(network)
       except KeyError:
         mac_network[mac] = {network}
+
+    
 
 #    print(leave_packets)
 #    leave = leave + len(leave_packets)

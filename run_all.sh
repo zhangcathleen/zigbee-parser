@@ -10,7 +10,7 @@ printf "sth2-room.pcap"
 ./zigbee.py sth2-room.pcap
 
 printf "sth2-trios.pcap"
-./zigbee.py sth2-trio.pcap
+./zigbee.py sth2-trios.pcap
 
 printf "sth3-duos.pcap"
 ./zigbee.py sth3-duos.pcap
