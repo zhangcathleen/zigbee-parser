@@ -48,15 +48,30 @@ else:
 #  print(seed)
 #  print(core)
 
-test1 = {"hi" : ("yes", "no")}
-test2 = {"hi2" : "yes2"}
+#test1 = {"hi" : ("yes", "no")}
+#test2 = {"hi2" : "yes2"}
+#
+#a = "hi"
+#
+#test1[f'{a}'] = 
+#
+#for k, v in test1.items():
+#  print(f'key {k} : val {type(v)}')
+#
+#for k, v in test2.items():
+#  print(f'key {k} : val {type(v)}')
 
-a = "hi"
 
-test1[f'{a}'] = 
+z = 10
 
-for k, v in test1.items():
-  print(f'key {k} : val {type(v)}')
+while z != 0:
+  if z > 5:
+    if z == 6:
+      print('six')
+  if z > 7:
+    if z == 6:
+      print(z)
+    if z == 8:
+      print('eight')
+  z = z - 1
 
-for k, v in test2.items():
-  print(f'key {k} : val {type(v)}')
