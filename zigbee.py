@@ -3,7 +3,7 @@
 import csv
 import sys
 import pyshark
-from scapy.all import *
+#from scapy.all import *
 import time
 
 
@@ -109,433 +109,410 @@ def parse():
   leave_2 = 0
   leave_3 = 0
   rejoin_request = 0
-#  global zbee_r
-#  global zbee_c
-#  global zbee_ed
-#  global zbee_red
-#  global ns_pak
-#  global rejoin_request_pak
-#  global edt_pak
-#
-#  global link_status
-#  global network_update
-#  global route_reply
-#  global network_report
-#  global rejoin_response
-#  global route_request
-#  global network_status
-#  global route_record
-#  global edt_request
-#  global edt_response
+
+  csv_file = "results.csv"
 
   if no >= 2:
     path = sys.argv[1]
     shark_cap = pyshark.FileCapture(path)
-    try:
-      for pk in shark_cap:
-        frame = pk.frame_info
-#        print(frame.time)
-#       if int(frame.number) % 1000 == 0:
-#         print(f"{frame.number}\n\n ")
-#       else:
-#         print(f"{frame.number} ", end="")
-        try:
-          if 'zbee_nwk' in dir(pk):
-            zbee = pk.zbee_nwk
-            wpan = pk.wpan
+
+    if no == 3:
+      csv_file == sys.argv[2]
+    with open(csv_file, mode = 'w') as results_file:
+      results_writer = csv.writer(results_file, delimiter = ',')
+      csv_time = ''
+      csv_src = ''
+      csv_dst = ''
+      csv_len = ''
+      csv_protocol = ''
+      csv_frame_num = ''
+      csv_packet = ''
+      
+      try:
+        for pk in shark_cap:
+          frame = pk.frame_info
+          csv_time = frame.time
+          csv_len = frame.len
+          csv_protocol = frame.protocols
+          csv_frame_num = frame.number
+          
+          
+          try:
+            if 'zbee_nwk' in dir(pk):
+              wpan = pk.wpan
+              zbee = pk.zbee_nwk
+              csv_src = wpan.src16
+              csv_dst = wpan.dst16
             
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # ~~~~~~ FRAME_TYPE == 0x01 ~~~~~~~~~
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            if zbee.frame_type == '0x00000001':
-#              if frame.number == '259':
-#                print(f'259 {type(zbee.data_len)}')
-#                print(3 == zbee.data_len)
-#                print('3' == zbee.data_len)
               
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ~~~~~~ ZBEE.RADIUS == 1 ~~~~~~
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              if zbee.radius == '1':
+              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+              # ~~~~~~ FRAME_TYPE == 0x01 ~~~~~~~~~
+              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+              if zbee.frame_type == '0x00000001':
                 
-                #  ===== link status packets ============
-                #  Dst : 0xfffc
-                #  Src : zc, zr 
-                if zbee.dst == '0x0000fffc':
-                  link_status = link_status + 1
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # ~~~~~~ ZBEE.RADIUS == 1 ~~~~~~
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if zbee.radius == '1':
                   
-                  if zbee.src != '0x00000000':
-                    zbee_r.add(zbee.src)
-                  elif zbee.src == '0x00000000':
-                    zbee_c.add(zbee.src64)
+                  #  ===== link status packets ============
+                  #  Dst : 0xfffc
+                  #  Src : zc, zr 
 
-                  if zbee.src64:
-                    network_mac[f'{zbee.src}'] = f'{zbee.src64}'
-                 
-                # ====== rejoin response packets =======
-                # dst : zr, zed
-                # src : zc, zr
-                if zbee.data_len == '4':
-                  rejoin_response = rejoin_response + 1
-                  
-                  # for the leave packet
-                  # if true : not a leave packet
-                  if leave_pak:
-                    delete = []
-                    for time, ip in leave_pak.items():
-                      l_dst = ip[1]
-                      l_src = ip[0]
-                      if (zbee.src == l_dst):
-                        if (zbee.dst == l_src):
-                          if (float(frame.time_epoch) - float(time) <= 60): # not a leave packet
-                            delete.append(time)
-                          elif (float(frame.time_epoch) - float(time) > 60): # a leave packet
-#                            leave = leave + 1
-                            print(time)
-                            leave_packets[time] = ip
-                            delete.append(time)
-                    for t in delete:
-                      del leave_pak[t]
-
-
-                  # for the rejoin request packets
-                  # if true : a rejoin request packet
-                  if rejoin_request_pak:
-                    delete = []
-                    for time, ip in rejoin_request_pak.items():
-                      if (zbee.src == ip[1]):
-                        if (zbee.dst == ip[0]):
-                          #print(f'post leave {rejoin_request_pak}')
-                          if (float(frame.time_epoch) - float(time) <= 60): # a rejoin request!
-                            rejoin_request = rejoin_request + 1
-                            delete.append(time)
-                          elif (float(frame.time_epoch) - float(time) > 60): # not a rejoin request
-                            delete.append(time)
-                    for t in delete:
-                      del rejoin_request_pak[t]
-
-                  if zbee.src != '0x00000000':
-                    zbee_r.add(zbee.src)
-                  else:
-                    zbee_c.add(zbee.src64)
-                  zbee_red.add(zbee.dst)
-                
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                # ~~~~~~~~ DATA.LEN == 2 ~~~~~~~~~~~~~~~
-                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if zbee.data_len == '2':
-                  
-                  # ===== leave packets ===========
-                  # dst : zc, zr, zed, 0xfffd
-                  # src : zc, zr, zed
-                  if (zbee.dst == '0x0000fffd'): # 1
-                    leave_1 = leave_1 + 1
-                  elif (zbee.dst != '0x0000fffc'):
-                    if (zbee.src == '0x00000000'): # 2
-                      leave_2 = leave_2 + 1
-                    else: # 3
-                      leave_pak[frame.time_epoch] = (zbee.src, zbee.dst)
-                  elif (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000ffff') and (zbee.dst != '0x00000000'): # 1 ZED
-                    leave_zed[zbee.dst] = zbee.dst64
-                
-                  # ===== rejoin request packets =======
-                  # dst : zc, zr
-                  # src : zr, zed
-                  if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
-                     #dst = (zbee.dst, zbee.dst64)
-                     #print(f'dst: {dst}\nrejion_request_pak : {rejoin_request_pak}')
-                     #rejoin_request_pak[f'{frame.time_epoch}'] = {f'{zbee.src}' : dst} # has potential ZED
-                     rejoin_request_pak[f'{frame.time_epoch}'] = (f'{zbee.src}', f'{zbee.dst}') # has potential ZED
-#                     print(f'possible rejoin request? {rejoin_request_pak}')
-#                    else: # zbee_nwk.dst != ZED
-#                      rejoin_request_pak[frame.time_epoch] = (zbee.src, (zbee.dst, zbee.dst64))
-#                      #rejoin_request_zed[zbee.dst] = zbee.dst64
-
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ~~~~~~~ DATA.LEN == 13 ~~~~~~~~~~
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ===== network update packets ===========
-              # dst : 0xfffc
-              # src : zc
-              if zbee.data_len == '13':
-                network_update = network_update + 1
-                
-                zbee_c.add(zbee.src64)
-              
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ~~~~~ DATA.LEN == 3 ~~~~~~~~~~~~
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ===== end device timeout request =======
-              # request dst : zc, zr
-              # request src : zed
-              if (zbee.data_len == '3') and ((zbee.dst == '0x00000000') or (zbee.dst in zbee_r)):
-                edt_request = edt_request + 1                
-
-                zbee_ed.add(zbee.src)
-                if zbee.src64:
-                  network_mac[f'zbee.src'] = f'zbee.src64'
-
-                if zbee.dst != '0x00000000':
-                  zbee_r.add(zbee.dst)
-                else:
-                  if zbee.dst64:
-                    zbee_c.add(zbee.dst64)
-
-              # ===== end device timeout response =======
-              # response dst : zed
-              # response : zc, zr
-              if (zbee.data_len == '3') and ((zbee.src == '0x00000000') or (zbee.src in zbee_r)):
-                edt_response = edt_response + 1
-
-                zbee_ed.add(zbee.dst)
-                if zbee.dst64:
-                  network_mac[f'zbee.dst'] = f'zbee.dst64'
-
-                if zbee.src != '0x00000000':
-                  zbee_r.add(zbee.src)
-                else:
-                  if zbee.src64:
-                    zbee_c.add(zbee.src64)
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              # ~~~~~~~ ZBEE. RADIUS != 1 ~~~~~~
-              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-              if zbee.radius != '1':
+                  if zbee.dst == '0x0000fffc':
+                    link_status = link_status + 1
+                    csv_packet = 'link status'
                     
-                # ===== route reply packets ==========
-                # Destination = ZC || ZR
-                # Source = ZC || ZR
-                if (wpan.src16 == zbee.src) and (zbee.ext_dst == '1') and ((zbee.data_len == '8') or (zbee.data_len == '16') or (zbee.data_len == '24')):
-                  route_reply = route_reply + 1
+                    if zbee.src != '0x00000000':
+                      zbee_r.add(zbee.src)
+                    elif zbee.src == '0x00000000':
+                      zbee_c.add(zbee.src64)
+  
+                    if zbee.src64:
+                      network_mac[f'{zbee.src}'] = f'{zbee.src64}'
+
+                     
+
+                   
+                  # ====== rejoin response packets =======
+                  # dst : zr, zed
+                  # src : zc, zr
+
+                  if zbee.data_len == '4':
+                    rejoin_response = rejoin_response + 1
+                    csv_packet = 'rejoin response'
+                    
+                    # for the leave packet
+                    # if true : not a leave packet
+                    if leave_pak:
+                      delete = []
+                      for time, ip in leave_pak.items():
+                        l_dst = ip[1]
+                        l_src = ip[0]
+                        if (zbee.src == l_dst):
+                          if (zbee.dst == l_src):
+                            if (float(frame.time_epoch) - float(time) <= 60): # not a leave packet
+                              delete.append(time)
+                            elif (float(frame.time_epoch) - float(time) > 60): # a leave packet
+                              leave_3 = leave_3 + 1
+                              # unsure how to put this in csv
+                              leave_packets[time] = ip
+                              delete.append(time)
+                      for t in delete:
+                        del leave_pak[t]
+  
+  
+                    # for the rejoin request packets
+                    # if true : a rejoin request packet
+                    if rejoin_request_pak:
+                      delete = []
+                      for time, ip in rejoin_request_pak.items():
+                        if (zbee.src == ip[1]):
+                          if (zbee.dst == ip[0]):
+                            #print(f'post leave {rejoin_request_pak}')
+                            if (float(frame.time_epoch) - float(time) <= 60): # a rejoin request!
+                              rejoin_request = rejoin_request + 1
+                              # unsure how to put this (prev packet) in csv
+                              delete.append(time)
+                            elif (float(frame.time_epoch) - float(time) > 60): # not a rejoin request
+                              delete.append(time)
+                      for t in delete:
+                        del rejoin_request_pak[t]
+  
+                    if zbee.src != '0x00000000':
+                      zbee_r.add(zbee.src)
+                    elif zbee.src == '0x00000000':
+                      zbee_c.add(zbee.src64)
+                      if zbee.src_route == True:
+                        zbee_r.add(zbee.dst)
+                      elif zbee.src_route == False:
+                        zbee_ed.add(zbee.dst)
                   
-                  if zbee.src != '0x00000000':
-                    zbee_r.add(zbee.src)
-                  else:
-                    zbee_c.add(zbee.src64)
+                     
+
+
+                  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                  # ~~~~~~~~ DATA.LEN == 2 ~~~~~~~~~~~~~~~
+                  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                  if zbee.data_len == '2':
+                    
+                    # ===== leave packets ===========
+                    # dst : zc, zr, zed, 0xfffd
+                    # src : zc, zr, zed
+
+                    if (zbee.dst == '0x0000fffd'): # 1
+                      leave_1 = leave_1 + 1
+                      csv_packet = 'leave packet'
+                       
+                    if (zbee.dst != '0x0000fffc'):
+                      if (zbee.src == '0x00000000'): # 2
+                        leave_2 = leave_2 + 1
+                        csv_packet = 'leave packet'
+                         
+                      else: # 3
+                        leave_pak[frame.time_epoch] = (zbee.src, zbee.dst)
+                         
+                    if (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000ffff') and (zbee.dst != '0x00000000'): # 1 ZED
+                      leave_zed[zbee.dst] = zbee.dst64
+                      csv_packet = 'leave packet check zed'
+                       
                   
+
+                    # ===== rejoin request packets =======
+                    # dst : zc, zr
+                    # src : zr, zed
+                    if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
+                      rejoin_request_pak[f'{frame.time_epoch}'] = (f'{zbee.src}', f'{zbee.dst}') # has potential ZED
+                      csv_packet = 'rejoin request packet check zed + rejoin response packet'
+                       
+
+  
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # ~~~~~~~ DATA.LEN == 13 ~~~~~~~~~~
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                # ===== network update packets ===========
+                # dst : 0xfffc
+                # src : zc
+
+                if zbee.data_len == '13':
+                  network_update = network_update + 1
+                  csv_packet = 'network update packet'
+                  
+                  zbee_c.add(zbee.src64)
+                   
+                
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # ~~~~~ DATA.LEN == 3 ~~~~~~~~~~~~
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                # ===== end device timeout request =======
+                # request dst : zc, zr
+                # request src : zed
+
+                if (zbee.data_len == '3') and ((zbee.dst == '0x00000000') or (zbee.dst in zbee_r)) and (zbee.src in zbee_ed):
+                  edt_request = edt_request + 1
+                  csv_packet = 'end device timeout request packet'
+  
+                  zbee_ed.add(zbee.src)
+                  if zbee.src64:
+                    network_mac[f'zbee.src'] = f'zbee.src64'
+  
                   if zbee.dst != '0x00000000':
                     zbee_r.add(zbee.dst)
-                  else:
-                    zbee_c.add(zbee.dst64)
-                 
-                # ====== network report packets ========
-                # destination : zc = 0x0000
-                # source : zr 
-                if (zbee.ext_dst == '0') and (zbee.dst == '0x00000000'):
-                  network_report = network_report + 1
-                  
-                  zbee_r.add(zbee.src)
-                  zbee_c.add(zbee.dst64)
-                  
-                # ===== route request packets =========
-                # dest : 0xfffc
-                # src : zc, zr, zed
-                if zbee.dst == '0x0000fffc':
-                  route_request = route_request + 1
-                  
-                  if zbee.src == '0x00000000':
-                    zbee_c.add(zbee.src64)
-                  else:
-                    zbee_red.add(zbee.src)
-                
-                # ===== network status packets ========
-                # dst : zc, zr, zed, 0xfffd
-                # src : zc, zr, zed
-#                if zbee.data_len == '2':
-#                  if wpan.src64 != zbee.src64:
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#
-#                  if (zbee.dst == '0x0000fffd'):
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#                  
-#                  if zbee.dst in zbee_ed:
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#  
-#                  else: # maybe we don't have this zed yet
-#                    ns_pak[frame.number] = zbee.dst
-#                
-#                if zbee.data_len == '4':
-#                  if wpan.src64 == zbee.src64:
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#      
-#                  if wpan.src64 == last_da:
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#
-#                  if (zbee.dst == '0x0000fffd'):
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#                  
-#                  if zbee.dst in zbee_ed:
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(src64)
-#  
-#                  else: # maybe we don't have this zed yet
-#                    ns_pak[frame.number] = zbee.dst
-                  
-                    
-                if zbee.data_len == '4':
-                  if wpan.src64 == zbee.src64:
-                    network_status = network_status + 1
-                    
-                    if zbee.src != '0x00000000':
-                      zbee_red.add(zbee.src)
-                    elif zbee.src == '0x00000000':
-                      zbee_c.add(zbee.src64)
-                    
-                    if zbee.dst != '0x0000fffd':
-                      if zbee.dst != '0x00000000':
-                        zbee_red.add(zbee.dst)
-                    elif zbee.dst == '0x00000000':
-                      zbee_c.add(zbee.dst64)
-                    
-                  if wpan.src64 == last_da:
-                    network_status = network_status + 1
-
-                    if zbee.src != '0x00000000':
-                      zbee_red.add(zbee.src)
-                    elif zbee.src == '0x00000000':
-                      zbee_c.add(zbee.src64)
-                    
-                    if zbee.dst != '0x0000fffd':
-                      if zbee.dst != '0x00000000':
-                        zbee_red.add(zbee.dst)
-                    elif zbee.dst == '0x00000000':
-                      zbee_c.add(zbee.dst64)
- 
-                if (zbee.data_len == '2') and (wpan.src64 != zbee.src64):
-                  network_status = network_status + 1
-
-                  if zbee.src != '0x00000000':
-                    zbee_red.add(zbee.src)
-                  elif zbee.src == '0x00000000':
-                    zbee_c.add(zbee.src64)
-                  
-                  if zbee.dst != '0x0000fffd':
-                    if zbee.dst != '0x00000000':
-                      zbee_red.add(zbee.dst)
                   elif zbee.dst == '0x00000000':
-                    zbee_c.add(zbee.dst64)
+                    if zbee.dst64:
+                      zbee_c.add(zbee.dst64)
+                  
+                   
 
-                if (zbee.data_len == '2') or (zbee.data_len == '4'):
-                  if zbee.dst == '0x0000fffd':
-                    network_status = network_status + 1
+  
+                # ===== end device timeout response =======
+                # dst : zed
+                # src : zc, zr
 
-                    if zbee.src != '0x00000000':
-                      zbee_red.add(zbee.src)
-                    elif zbee.src == '0x00000000':
+                if (zbee.data_len == '3') and ((zbee.src == '0x00000000') or (zbee.src in zbee_r)):
+                  edt_response = edt_response + 1
+                  csv_packet = 'end device timeout response packet'
+  
+                  zbee_ed.add(zbee.dst)
+                  if zbee.dst64:
+                    network_mac[f'zbee.dst'] = f'zbee.dst64'
+  
+                  if zbee.src != '0x00000000':
+                    zbee_r.add(zbee.src)
+                  elif zbee.dst == '0x00000000':
+                    if zbee.src64:
                       zbee_c.add(zbee.src64)
-                    
-                    if zbee.dst != '0x0000fffd':
-                      if zbee.dst != '0x00000000':
-                        zbee_red.add(zbee.dst)
-                      elif zbee.dst == '0x00000000':
-                        zbee_c.add(zbee.dst64)
+                  
+                   
 
-                  elif zbee.dst in zbee_ed:
-                    network_status = network_status + 1
 
-                    if zbee.src != '0x00000000':
-                      zbee_red.add(zbee.src)
-                    elif zbee.src == '0x00000000':
-                      zbee_c.add(zbee.src64)
-                    
-                    if zbee.dst != '0x0000fffd':
-                      if zbee.dst != '0x00000000':
-                        zbee_red.add(zbee.dst)
-                      elif zbee.dst == '0x00000000':
-                        zbee_c.add(zbee.dst64)
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                # ~~~~~~~ ZBEE. RADIUS != 1 ~~~~~~
+                # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if zbee.radius != '1':
+                      
+                  # ===== route reply packets ==========
+                  # Destination = ZC || ZR
+                  # Source = ZC || ZR
 
-                  else:
-                    ns_pak[frame.number] = zbee.dst
-
-#                if (zbee.data_len == '4'):
-#                  if wpan.src64 == last_da:
-#                    network_status = network_status + 1
-#                    if zbee.src != '0x00000000':
-#                      zbee_red.add(zbee.src)
-#                    elif zbee.src == '0x00000000':
-#                      zbee_c.add(zbee.src64)
-#                    
-#                    if zbee.dst != '0x0000fffd':
-#                      if zbee.dst != '0x00000000':
-#                        zbee_red.add(zbee.dst)
-#                    elif zbee.dst == '0x00000000':
-#                      zbee_c.add(zbee.dst64)
-                
-                
-
-                # ===== route record packets ===========
-                # dst : zc, zr
-                # src : zc, zr, zed
-                if zbee.dst != '0x0000fffc':
-                  if (zbee.data_len == '6') or (zbee.data_len == '10'):
-                    route_record = route_record + 1
+                  if (wpan.src16 == zbee.src) and (zbee.ext_dst == '1') and ((zbee.data_len == '8') or (zbee.data_len == '16') or (zbee.data_len == '24')):
+                    route_reply = route_reply + 1
+                    csv_packet = 'route reply packet'
                     
                     if zbee.src != '0x00000000':
-                      zbee_red.add(zbee.src)
-                    elif zbee.src == '0x00000000':
+                      zbee_r.add(zbee.src)
+                    else:
                       zbee_c.add(zbee.src64)
                     
                     if zbee.dst != '0x00000000':
                       zbee_r.add(zbee.dst)
-                    elif zbee.dst == '0x00000000':
+                    else:
                       zbee_c.add(zbee.dst64)
-                  
-                  if zbee.ext_dst == '1':
-                    if (zbee.data_len != '2') and (zbee.data_len != '4') and (wpan.src64 != zbee.src64):
-                      route_record = route_record + 1
-                      
-                      if zbee.src != '0x00000000':
-                        zbee_red.add(zbee.src)
-                      elif zbee.src == '0x00000000':
-                        zbee_c.add(zbee.src64)
-                      
-                      if zbee.dst != '0x00000000':
-                        zbee_r.add(zbee.dst)
-                      elif zbee.dst == '0x00000000':
-                        zbee_c.add(zbee.dst64)
                     
-                    if (zbee.dst != '0x0000fffd') and (wpan.src64 == zbee.src64) and (zbee.data_len == '2'):
-                      route_record = route_record + 1
-                      
-                      if zbee.src != '0x00000000':
-                        zbee_red.add(zbee.src)
-                      elif zbee.src == '0x00000000':
-                        zbee_c.add(zbee.src64)
-                      
-                      if zbee.dst != '0x00000000':
-                        zbee_r.add(zbee.dst)
-                      elif zbee.dst == '0x00000000':
-                        zbee_c.add(zbee.dst64)
+                     
 
+                   
+                  # ====== network report packets ========
+                  # destination : zc = 0x0000
+                  # source : zr
+
+                  if (zbee.ext_dst == '0') and (zbee.dst == '0x00000000'):
+                    network_report = network_report + 1
+                    csv_packet = 'network report packet'
+                    
+                    zbee_r.add(zbee.src)
+                    zbee_c.add(zbee.dst64)
+                    
+                     
+
+                    
+                  # ===== route request packets =========
+                  # dest : 0xfffc
+                  # src : zc, zr, zed
+
+                  if zbee.dst == '0x0000fffc':
+                    route_request = route_request + 1
+                    csv_packet = 'route request packet'
+                    
+                    if zbee.src == '0x00000000':
+                      zbee_c.add(zbee.src64)
+                    else:
+                      zbee_red.add(zbee.src)
+
+                     
+                  
+
+                  # ===== network status packets ========
+                  # dst : zc, zr, zed, 0xfffd
+                  # src : zc, zr, zed
+                      
                   if zbee.data_len == '4':
+                    if wpan.src64 == zbee.src64:
+                      network_status = network_status + 1
+                      csv_packet = 'network status packet'
+                      
+                      if zbee.src != '0x00000000':
+                        zbee_red.add(zbee.src)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.dst != '0x00000000':
+                            zbee_red.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+
+                      elif zbee.src == '0x00000000':
+                        zbee_c.add(zbee.src64)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.src_route == True:
+                            zbee_r.add(zbee.dst)
+                          elif zbee.src_route == False:
+                            zbee_ed.add(zbee.dst)
+                          
+                                             
+                      
                     if wpan.src64 == last_da:
+                      network_status = network_status + 1
+                      csv_packet = 'network status packet'
+  
+                      if zbee.src != '0x00000000':
+                        zbee_red.add(zbee.src)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.dst != '0x00000000':
+                            zbee_red.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+
+                      elif zbee.src == '0x00000000':
+                        zbee_c.add(zbee.src64)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.src_route == True:
+                            zbee_r.add(zbee.dst)
+                          elif zbee.src_route == False:
+                            zbee_ed.add(zbee.dst)
+                          
+                       
+   
+                  if (zbee.data_len == '2') and (wpan.src64 != zbee.src64):
+                    network_status = network_status + 1
+                    csv_packet = 'network status packet'
+  
+                    if zbee.src != '0x00000000':
+                      zbee_red.add(zbee.src)
+                      if zbee.dst != '0x0000fffd':
+                        if zbee.dst != '0x00000000':
+                          zbee_red.add(zbee.dst)
+                      elif zbee.dst == '0x00000000':
+                        zbee_c.add(zbee.dst64)
+
+                    elif zbee.src == '0x00000000':
+                      zbee_c.add(zbee.src64)
+                      if zbee.dst != '0x0000fffd':
+                        if zbee.src_route == True:
+                          zbee_r.add(zbee.dst)
+                        elif zbee.src_route == False:
+                          zbee_ed.add(zbee.dst)
+                          
+                     
+  
+                  if (zbee.data_len == '2') or (zbee.data_len == '4'):
+                    if zbee.dst == '0x0000fffd':
+                      network_status = network_status + 1
+                      csv_packet = 'network status packet'
+  
+                      if zbee.src != '0x00000000':
+                        zbee_red.add(zbee.src)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.dst != '0x00000000':
+                            zbee_red.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+
+                      elif zbee.src == '0x00000000':
+                        zbee_c.add(zbee.src64)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.src_route == True:
+                            zbee_r.add(zbee.dst)
+                          elif zbee.src_route == False:
+                            zbee_ed.add(zbee.dst)
+                            
+                       
+  
+                    elif zbee.dst in zbee_ed:
+                      network_status = network_status + 1
+                      csv_packet = 'network status packet'
+  
+                      if zbee.src != '0x00000000':
+                        zbee_red.add(zbee.src)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.dst != '0x00000000':
+                            zbee_red.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+
+                      elif zbee.src == '0x00000000':
+                        zbee_c.add(zbee.src64)
+                        if zbee.dst != '0x0000fffd':
+                          if zbee.src_route == True:
+                            zbee_r.add(zbee.dst)
+                          elif zbee.src_route == False:
+                            zbee_ed.add(zbee.dst)
+                            
+                       
+  
+                    else:
+                      ns_pak[frame.number] = zbee.dst
+                      csv_packet = 'network status packet check zed'
+
+
+                  # ===== route record packets ===========
+                  # dst : zc, zr
+                  # src : zc, zr, zed
+
+                  if zbee.dst != '0x0000fffc':
+                    if (zbee.data_len == '6') or (zbee.data_len == '10'):
                       route_record = route_record + 1
+                      csv_packet = 'route record packet'
                       
                       if zbee.src != '0x00000000':
                         zbee_red.add(zbee.src)
@@ -546,24 +523,75 @@ def parse():
                         zbee_r.add(zbee.dst)
                       elif zbee.dst == '0x00000000':
                         zbee_c.add(zbee.dst64)
-            
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            # ~~~~~~~ WPAN.FRAME_TYPE == 0x01 ~~~~~~~
-            # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-          
-            # ===== device announcements ============
-            # dst : 0xfffd
-            if (wpan.frame_type == '0x00000001'):
-              if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
-                last_da = wpan.src64
-            
-        except AttributeError:
-          pass
-      
 
-      # last requirement of network status
-    except KeyboardInterrupt:
-      print("\n\nINTERRRUPPTEDDDD")
+                       
+                    
+                    if zbee.ext_dst == '1':
+                      if (zbee.data_len != '2') and (zbee.data_len != '4') and (wpan.src64 != zbee.src64):
+                        route_record = route_record + 1
+                        csv_packet = 'route record packet'
+                        
+                        if zbee.src != '0x00000000':
+                          zbee_red.add(zbee.src)
+                        elif zbee.src == '0x00000000':
+                          zbee_c.add(zbee.src64)
+                        
+                        if zbee.dst != '0x00000000':
+                          zbee_r.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+
+                         
+                      
+                      if (zbee.dst != '0x0000fffd') and (wpan.src64 == zbee.src64) and (zbee.data_len == '2'):
+                        route_record = route_record + 1
+                        csv_packet = 'route record packet'
+                        
+                        if zbee.src != '0x00000000':
+                          zbee_red.add(zbee.src)
+                        elif zbee.src == '0x00000000':
+                          zbee_c.add(zbee.src64)
+                        
+                        if zbee.dst != '0x00000000':
+                          zbee_r.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+
+                         
+  
+                    if zbee.data_len == '4':
+                      if wpan.src64 == last_da:
+                        route_record = route_record + 1
+                        csv_packet = 'route record packet'
+                        
+                        if zbee.src != '0x00000000':
+                          zbee_red.add(zbee.src)
+                        elif zbee.src == '0x00000000':
+                          zbee_c.add(zbee.src64)
+                        
+                        if zbee.dst != '0x00000000':
+                          zbee_r.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+                        
+                         
+              
+              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+              # ~~~~~~~ WPAN.FRAME_TYPE == 0x01 ~~~~~~~
+              # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            
+              # ===== device announcements ============
+              # dst : 0xfffd
+              if (wpan.frame_type == '0x00000001'):
+                if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
+                  last_da = wpan.src64
+              
+            #results_writer.writerow([f'{csv_time}', f'{csv_src}', f'{csv_dst}', f'{csv_len}', f'{csv_protocol}', f'{csv_frame_num}', f'{csv_packet}'])
+          except AttributeError:
+            pass
+
+      except KeyboardInterrupt:
+        print("\n\nINTERRRUPPTEDDDD")
       
 
     zbee_ed = zbee_red.difference(zbee_r)
@@ -659,7 +687,7 @@ def parse():
 #    print(f"\n========\nzbee router addresses : {zbee_r}\n========\n")
 #    print(f"\n========\nzbee coordinator addresses : {zbee_c}\n========\n")
 #    print(f"\n========\nzbee end devices addresses : {zbee_ed}\n========\n")
-#    print(f'mac : [network_id]\n{mac_network}')
+    print(f'mac : [network_id]\n{mac_network}')
 #   print(c_zbee)
 #   print(r_zbee)
 #   print(ed_zbee)

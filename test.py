@@ -62,16 +62,19 @@ else:
 #  print(f'key {k} : val {type(v)}')
 
 
-z = 10
+y = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
-while z != 0:
+for z in y:
+  print(z)
   if z > 5:
     if z == 6:
       print('six')
+      continue
+    if z % 6 == 0:
+      print('xis6')
   if z > 7:
     if z == 6:
       print(z)
     if z == 8:
       print('eight')
-  z = z - 1
 
