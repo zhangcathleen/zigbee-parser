@@ -152,8 +152,7 @@ def parse():
             if wpan.src_addr_mode == '0x00000002':
               zbee_ed.add(wpan.src16)
         except AttributeError:
-          print(frame.number)
-
+          pass
         
         try:
           if 'zbee_nwk' in dir(pk):
@@ -161,7 +160,6 @@ def parse():
             csv_src = wpan.src16
             csv_dst = wpan.dst16
           
-            
 
                 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -180,7 +178,7 @@ def parse():
 
                 if zbee.dst == '0x0000fffc':
                   link_status = link_status + 1
-                  csv_packet = 'link status'
+                  #csv_packet = 'link status'
                   
                   if zbee.src != '0x00000000':
                     zbee_r.add(zbee.src)
@@ -199,7 +197,7 @@ def parse():
 
                 if zbee.data_len == '4':
                   rejoin_response = rejoin_response + 1
-                  csv_packet = 'rejoin response'
+                  #csv_packet = 'rejoin response'
                   
                   # for the leave packet
                   # if true : not a leave packet
@@ -261,19 +259,19 @@ def parse():
 
                   if (zbee.dst == '0x0000fffd'): # 1
                     leave_1 = leave_1 + 1
-                    csv_packet = 'leave packet'
+                    #csv_packet = 'leave packet'
                      
                   if (zbee.dst != '0x0000fffc'):
                     if (zbee.src == '0x00000000'): # 2
                       leave_2 = leave_2 + 1
-                      csv_packet = 'leave packet'
+                      #csv_packet = 'leave packet'
                        
                     else: # 3
                       leave_pak[frame.time_epoch] = (zbee.src, zbee.dst)
                        
                   if (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000ffff') and (zbee.dst != '0x00000000'): # 1 ZED
                     leave_zed[zbee.dst] = zbee.dst64
-                    csv_packet = 'leave packet check zed'
+                    #csv_packet = 'leave packet check zed'
                      
                 
 
@@ -282,7 +280,7 @@ def parse():
                   # src : zr, zed
                   if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
                     rejoin_request_pak[f'{frame.time_epoch}'] = (f'{zbee.src}', f'{zbee.dst}') # has potential ZED
-                    csv_packet = 'rejoin request packet check zed + rejoin response packet'
+                    #csv_packet = 'rejoin request packet check zed + rejoin response packet'
                      
 
   
@@ -296,7 +294,7 @@ def parse():
 
               if zbee.data_len == '13':
                 network_update = network_update + 1
-                csv_packet = 'network update packet'
+                #csv_packet = 'network update packet'
                 
                 zbee_c.add(zbee.src64)
                  
@@ -311,8 +309,8 @@ def parse():
 
               if (zbee.data_len == '3') and ((zbee.dst == '0x00000000') or (zbee.dst in zbee_r)) and (zbee.src in zbee_ed):
                 edt_request = edt_request + 1
-                csv_packet = 'end device timeout request packet'
-                print(f'{frame.number} : [{zbee.src} = {zbee.dst}]')
+                #csv_packet = 'end device timeout request packet'
+#                print(f'{frame.number} : [{zbee.src} = {zbee.dst}]')
   
                 zbee_ed.add(zbee.src)
                 if zbee.src64:
@@ -333,7 +331,7 @@ def parse():
 
               if (zbee.data_len == '3') and ((zbee.src == '0x00000000') or (zbee.src in zbee_r)):
                 edt_response = edt_response + 1
-                csv_packet = 'end device timeout response packet'
+                #csv_packet = 'end device timeout response packet'
   
                 zbee_ed.add(zbee.dst)
                 if zbee.dst64:
@@ -359,7 +357,7 @@ def parse():
 
                 if (wpan.src16 == zbee.src) and (zbee.ext_dst == '1') and ((zbee.data_len == '8') or (zbee.data_len == '16') or (zbee.data_len == '24')):
                   route_reply = route_reply + 1
-                  csv_packet = 'route reply packet'
+                  #csv_packet = 'route reply packet'
                   
                   if zbee.src != '0x00000000':
                     zbee_r.add(zbee.src)
@@ -380,7 +378,7 @@ def parse():
 
                 if (zbee.ext_dst == '0') and (zbee.dst == '0x00000000'):
                   network_report = network_report + 1
-                  csv_packet = 'network report packet'
+                  #csv_packet = 'network report packet'
                   
                   zbee_r.add(zbee.src)
                   zbee_c.add(zbee.dst64)
@@ -394,7 +392,7 @@ def parse():
 
                 if zbee.dst == '0x0000fffc':
                   route_request = route_request + 1
-                  csv_packet = 'route request packet'
+                  #csv_packet = 'route request packet'
                   
                   if zbee.src == '0x00000000':
                     zbee_c.add(zbee.src64)
@@ -411,7 +409,7 @@ def parse():
                 if zbee.data_len == '4':
                   if wpan.src64 == zbee.src64:
                     network_status = network_status + 1
-                    csv_packet = 'network status packet'
+                    #csv_packet = 'network status packet'
                     
                     if zbee.src != '0x00000000':
                       #zbee_red.add(zbee.src)
@@ -429,12 +427,11 @@ def parse():
                         elif zbee.src_route == False:
                           zbee_ed.add(zbee.dst)
                         
-                    continue
-                                           
+                    continue                       
                     
                   if wpan.src64 == last_da:
                     network_status = network_status + 1
-                    csv_packet = 'network status packet'
+                    #csv_packet = 'network status packet'
   
                     if zbee.src != '0x00000000':
                      # zbee_red.add(zbee.src)
@@ -451,13 +448,12 @@ def parse():
                           zbee_r.add(zbee.dst)
                         elif zbee.src_route == False:
                           zbee_ed.add(zbee.dst)
-                        
+                    
                     continue
- 
    
                 if (zbee.data_len == '2') and (wpan.src64 != zbee.src64):
                   network_status = network_status + 1
-                  csv_packet = 'network status packet'
+                  #csv_packet = 'network status packet'
   
                   if zbee.src != '0x00000000':
                     #zbee_red.add(zbee.src)
@@ -474,14 +470,14 @@ def parse():
                         zbee_r.add(zbee.dst)
                       elif zbee.src_route == False:
                         zbee_ed.add(zbee.dst)
-                        
-                  continue
+
+                  continue      
  
   
                 if (zbee.data_len == '2') or (zbee.data_len == '4'):
                   if zbee.dst == '0x0000fffd':
                     network_status = network_status + 1
-                    csv_packet = 'network status packet'
+                    #csv_packet = 'network status packet'
   
                     if zbee.src != '0x00000000':
                       #zbee_red.add(zbee.src)
@@ -498,13 +494,13 @@ def parse():
                           zbee_r.add(zbee.dst)
                         elif zbee.src_route == False:
                           zbee_ed.add(zbee.dst)
-                          
-                    continue
+
+                    continue      
  
   
                   elif zbee.dst in zbee_ed:
                     network_status = network_status + 1
-                    csv_packet = 'network status packet'
+                    #csv_packet = 'network status packet'
   
                     if zbee.src != '0x00000000':
                       #zbee_red.add(zbee.src)
@@ -521,12 +517,12 @@ def parse():
                           zbee_r.add(zbee.dst)
                         elif zbee.src_route == False:
                           zbee_ed.add(zbee.dst)
-                          
-                    continue 
+
+                    continue      
   
                   else:
                     ns_pak[frame.number] = zbee.dst
-                    csv_packet = 'network status packet check zed'
+                    #csv_packet = 'network status packet check zed'
 
 
                 # ===== route record packets ===========
@@ -536,7 +532,7 @@ def parse():
                 if zbee.dst != '0x0000fffc':
                   if (zbee.data_len == '6') or (zbee.data_len == '10'):
                     route_record = route_record + 1
-                    csv_packet = 'route record packet'
+                    #csv_packet = 'route record packet'
                     
                     #if zbee.src != '0x00000000':
                     #  zbee_red.add(zbee.src)
@@ -553,7 +549,7 @@ def parse():
                   if zbee.ext_dst == '1':
                     if (zbee.data_len != '2') and (zbee.data_len != '4') and (wpan.src64 != zbee.src64):
                       route_record = route_record + 1
-                      csv_packet = 'route record packet'
+                      #csv_packet = 'route record packet'
                       
                      # if zbee.src != '0x00000000':
                       #  zbee_red.add(zbee.src)
@@ -569,7 +565,7 @@ def parse():
                     
                     if (zbee.dst != '0x0000fffd') and (wpan.src64 == zbee.src64) and (zbee.data_len == '2'):
                       route_record = route_record + 1
-                      csv_packet = 'route record packet'
+                      #csv_packet = 'route record packet'
                       
                       #if zbee.src != '0x00000000':
                       #  zbee_red.add(zbee.src)
@@ -586,7 +582,7 @@ def parse():
                   if zbee.data_len == '4':
                     if wpan.src64 == last_da:
                       route_record = route_record + 1
-                      csv_packet = 'route record packet'
+                      #csv_packet = 'route record packet'
                       
                       #if zbee.src != '0x00000000':
                       #  zbee_red.add(zbee.src)
