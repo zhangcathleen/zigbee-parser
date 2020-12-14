@@ -91,9 +91,16 @@ def parse():
 #  # if not = leave packet
 #  leave_pak = {}
 
-  # leave time : (src, dst) after identifying that they are leave packets
-  # in rejoin response
-  #leave_packets = {}
+  # leave time : (src, dst) 
+  # helping identify leave packets 1 + 2
+  leave_packets = {}
+
+  # help identify leave 3 packets  
+  leave_3_packets = {}
+
+  # help identify rejoin request packets
+  request_packets = {}
+
 
 #  # frames that might be leave packets, but need the ZED
 #  # maps network_id : mac_id
@@ -158,6 +165,9 @@ def parse():
         except AttributeError:
           pass
         
+        if (frame.number == '52616'):
+          print('zbee_aps' in frame.protocols)
+        
         try:
           if 'zbee_nwk' in dir(pk):
             zbee = pk.zbee_nwk
@@ -210,9 +220,18 @@ def parse():
                     for time, ip in check_response.items():
                       if (zbee.src == ip[1]):
                         if (zbee.dst == ip[0]):
-                          rejoin_request = rejoin_request + 1
-                          delete.append(time)
-                          print(f'time {time} : [ {zbee.dst}, {zbee.src} ]')
+                          elapsed = float(frame.time_epoch) - float(time)
+#                          print(elapsed)
+                          if elapsed <= 60:
+                            rejoin_request = rejoin_request + 1
+                            request_packets[time] = (ip[0], ip[1])
+                            delete.append(time)
+                            print(f'rejoin request {time} : [ {zbee.dst}, {zbee.src} ]')
+                          elif elapsed > 60:
+                            leave_3 = leave_3 + 1
+                            leave_3_packets[time] = (ip[0], ip[1])
+                            delete.append(time)
+                            print(f'leave {frame.number} {time} : [ {zbee.dst}, {zbee.src} ]')
                     for t in delete:
                       del check_response[t]
 #                  # for the leave packet
@@ -283,36 +302,31 @@ def parse():
 
                   if (zbee.dst == '0x0000fffd') or (zbee.dst in zbee_ed): # 1
                     leave_1 = leave_1 + 1
-#                    print(f'{frame.number} : [{zbee.src} = {zbee.dst}]')
+                    leave_packets[frame.number] = (zbee.src, zbee.dst)
                     continue
                      
                   if (zbee.dst != '0x0000fffc'):
                     if (zbee.src == '0x00000000'): # 2
                       leave_2 = leave_2 + 1
-#                      print(f'{frame.number} : [{zbee.src} = {zbee.dst}]')
+                      leave_packets[frame.number] = (zbee.src, zbee.dst)
                       continue
                        
                     else: # 3
                       check_response[frame.time_epoch] = (zbee.src, zbee.dst)
-#                      print(f'check {frame.number} : {frame.time_epoch}')
+                      print(f'check {frame.number} : {frame.time_epoch}')
                        
-#                  if (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000ffff') and (zbee.dst != '0x00000000'): # 1 ZED
-#                    if zbee.dst in zbee_ed:
-#                      leave_1 = leave_1 + 1
-#                      print(f'zbee.dst in zbee_ed : {frame.number} : [{zbee.src} = {zbee.dst}]')
-#                      continue
-
-#                    leave_zed[zbee.dst] = zbee.dst64
-                    #csv_packet = 'leave packet check zed'
                      
                 
-
-                  # ===== rejoin request packets =======
-                  # dst : zc, zr
-                  # src : zr, zed
-                  if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
-                    check_response[frame.time_epoch] = (zbee.src, zbee.dst)
-                    print(f'check {frame.number} : {frame.time_epoch}')
+#                  if (frame.number == '85805'):
+#                    print(check_response)
+#
+#                  # ===== rejoin request packets =======
+#                  # dst : zc, zr
+#                  # src : zr, zed
+#                  if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
+#                    check_response[frame.time_epoch] = (zbee.src, zbee.dst)
+#                    #print(f'check {frame.number} : {frame.time_epoch}')
+#                    continue
                      
 
   
@@ -341,7 +355,6 @@ def parse():
 
               if (zbee.data_len == '3') and ((zbee.dst == '0x00000000') or (zbee.dst in zbee_r)) and (zbee.src in zbee_ed):
                 edt_request = edt_request + 1
-#                print(f'{frame.number} : [{zbee.src} = {zbee.dst}]')
   
                 zbee_ed.add(zbee.src)
                 if zbee.src64:
@@ -665,8 +678,11 @@ def parse():
 #        network_mac[nid] = mac
 
     # check leave_pakckets
-    print(check_response)
-    leave_3 = leave_3 + len(check_response)
+    print(f'leave 1 + 2 :\n\n  {leave_packets}')
+    print(f'leave 3 : \n\n {leave_3_packets}')
+    print(f'rejoin request : \n\n {request_packets}')
+    print(f'left over packets :\n\n  {check_response}')
+#    leave_3 = leave_3 + len(check_response)
 
 #    # check if the rejoin_request_zed is an end device
 #    # if yes:
