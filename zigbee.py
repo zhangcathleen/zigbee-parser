@@ -248,50 +248,7 @@ def parse():
                             # print(f'leave {frame.number} {time} : [ {zbee.dst}, {zbee.src} ]')
                     for t in delete:
                       del check_response[t]
-#                  # for the leave packet
-#                  # if true : not a leave packet
-##                  if (int(frame.number) > 12591):
-##                    print(f'{frame.number} : {leave_pak}')
-#                  if leave_pak:
-#                    delete = []
-#                    for time, ip in leave_pak.items():
-#                      l_dst = ip[1]
-#                      l_src = ip[0]
-#                      if (zbee.src == l_dst):
-#                        if (zbee.dst == l_src):
-##                          if (float(frame.time_epoch) - float(time) <= 60): # not a leave packet a rejoin request packet
-#                          delete.append(time)
-##                            print(frame.time_epoch)
-##                          elif (float(frame.time_epoch) - float(time) > 60): # a leave packet
-##                            print('leave_3:')
-#                            #leave_3 = leave_3 + 1
-##                            print(f'time {time} : [{zbee.dst} = {zbee.src}]')
-##                            pass
-#                            # unsure how to put this in csv
-#                            #leave_packets[time] = ip
-##                            delete.append(time)
-#                    for t in delete:
-#                      del leave_pak[t]
-#  
-#  
-#                  # for the rejoin request packets
-#                  # if true : a rejoin request packet
-#                  if rejoin_request_pak:
-#                    delete = []
-#                    for time, ip in rejoin_request_pak.items():
-#                      if (zbee.src == ip[1]):
-#                        if (zbee.dst == ip[0]):
-#                          #print(f'post leave {rejoin_request_pak}')
-##                          if (float(frame.time_epoch) - float(time) <= 60): # a rejoin request!
-#                          rejoin_request = rejoin_request + 1
-#                            # unsure how to put this (prev packet) in csv
-#                          delete.append(time)
-#                          print(f'time {time} : [ {zbee.dst}, {zbee.src} ]')
-##                          elif (float(frame.time_epoch) - float(time) > 60): # not a rejoin request
-##                            delete.append(time)
-#                    for t in delete:
-#                      del rejoin_request_pak[t]
-  
+
                   if zbee.src != '0x00000000':
                     zbee_r.add(zbee.src)
                   elif zbee.src == '0x00000000':
@@ -329,21 +286,6 @@ def parse():
                       check_response[frame.time_epoch] = (zbee.src, zbee.dst)
                       # print(f'check {frame.number} : {frame.time_epoch}')
                        
-                     
-                
-#                  if (frame.number == '85805'):
-#                    print(check_response)
-#
-#                  # ===== rejoin request packets =======
-#                  # dst : zc, zr
-#                  # src : zr, zed
-#                  if (zbee.src != '0x00000000') and (zbee.dst != '0x0000fffc') and (zbee.dst != '0x0000fffd') and (zbee.dst != '0x0000ffff'):
-#                    check_response[frame.time_epoch] = (zbee.src, zbee.dst)
-#                    #print(f'check {frame.number} : {frame.time_epoch}')
-#                    continue
-                     
-
-  
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
               # ~~~~~~~ DATA.LEN == 13 ~~~~~~~~~~
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,8 +324,6 @@ def parse():
                 
                 continue
                 
-                 
-
   
               # ===== end device timeout response =======
               # dst : zed
@@ -404,7 +344,6 @@ def parse():
                 
                 continue
                  
-
 
               # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
               # ~~~~~~~ ZBEE. RADIUS != 1 ~~~~~~
@@ -429,7 +368,6 @@ def parse():
                   else:
                     zbee_c.add(zbee.dst64)
                   
-                   
 
                  
                 # ====== network report packets ========
@@ -445,7 +383,6 @@ def parse():
                   
                    
 
-                  
                 # ===== route request packets =========
                 # dest : 0xfffc
                 # src : zc, zr, zed
@@ -461,7 +398,6 @@ def parse():
 
                    
                 
-
                 # ===== network status packets ========
                 # dst : zc, zr, zed, 0xfffd
                 # src : zc, zr, zed
@@ -795,57 +731,8 @@ def parse():
         mac_network[mac] = {network}
 
     
-
-#    print(leave_packets)
-#    leave = leave + len(leave_packets)
-#   c_zbee = {}
-#   nm_copy = network_mac
-#   for c in zbee_c:
-#     print(nm_copy)
-#     for nip, mac in nm_copy.items():
-#       if mac == c:
-#         try:
-#           c_zbee[mac].add(nip)
-#         except KeyError:
-#           c_zbee[mac] = {nip}
-#         network_mac.pop(nip)
-# 
-
-#   r_zbee = {}
-#   nm_copy = network_mac
-#   for r in zbee_r:
-#     for nip, mac in nm_copy.items():
-#       if nip == r:
-#         try:
-#           r_zbee[mac].add(nip)
-#         except KeyError:
-#           r_zbee[mac] = {nip}
-#         network_mac.pop(nip)
-#   
-
-#   ed_zbee = {}
-#   nm_copy = network_mac
-#   for ed in zbee_ed:
-#     for nip, mac in network_mac.items():
-#       if nip == ed:
-#         try:
-#           ed_zbee[mac].add(nip)
-#         except KeyError:
-#           ed_zbee[mac] = {nip}
-#         nm_copy.pop(nip)
-
-#   print(len(nm_copy))
-      
-    
-    
     finish()
-#    print(f"\n========\nzbee router addresses : {zbee_r}\n========\n")
-#    print(f"\n========\nzbee coordinator addresses : {zbee_c}\n========\n")
-#    print(f"\n========\nzbee end devices addresses : {zbee_ed}\n========\n")
     print(f'mac : [network_id]\n{mac_network}')
-#   print(c_zbee)
-#   print(r_zbee)
-#   print(ed_zbee)
 
     print("\n\nzbee coordinator addresses:")
     for c in zbee_c:
