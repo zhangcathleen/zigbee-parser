@@ -108,13 +108,13 @@ def parse():
   request_packets = {}
 
   # help identify network status packets 1
-  network_status_1 = {}
+  network_status_1 = []
 
   # help identify network status packets 2 3
-  network_status_packets = {}
+  network_status_packets = []
   
   # help identify network stats packets 4
-  network_status_4 = {}
+  network_status_4 = []
 
 
 #  # frames that might be leave packets, but need the ZED
@@ -402,6 +402,7 @@ def parse():
                 # dst : zc, zr, zed, 0xfffd
                 # src : zc, zr, zed
                 
+
                 # if frame.number == '1706':
                 #     print(f'1706 : {zbee.data_len}')
                 #     print(f'{zbee}')
@@ -412,6 +413,7 @@ def parse():
                     if wpan.src64 == zbee.src64:
                       # 2
                       network_status = network_status + 1
+                      network_status_packets.append(frame.number)
                       # print(f'ns packet 2 : {frame.number}')
                       #csv_packet = 'network status packet'
                       
@@ -437,6 +439,7 @@ def parse():
                     if wpan.src16 == zbee.src:
                       # 2
                       network_status = network_status + 1
+                      network_status_packets.append(frame.number)
                       # print(f'ns packet 2 wpan src : {frame.number}')
                       #csv_packet = 'network status packet'
                       
@@ -458,37 +461,39 @@ def parse():
                       
                       continue
                   
-                  try:
-                    if wpan.src64 == last_da:
-                      # 4
-                      network_status = network_status + 1
-                      # print(f'ns packet 4 : {frame.number} : {last_da}')
-                      #csv_packet = 'network status packet'
+                  # try:
+                  #   if wpan.src64 == last_da:
+                  #     # 4
+                  #     network_status = network_status + 1
+                  #     network_status_4.append(frame.number)
+                  #     # print(f'ns packet 4 : {frame.number} : {last_da}')
+                  #     #csv_packet = 'network status packet'
     
-                      if zbee.src != '0x00000000':
-                      # zbee_red.add(zbee.src)
-                        #if zbee.dst != '0x0000fffd':
-                        #  if zbee.dst != '0x00000000':
-                        #    zbee_red.add(zbee.dst)
-                        if zbee.dst == '0x00000000':
-                          zbee_c.add(zbee.dst64)
+                  #     if zbee.src != '0x00000000':
+                  #     # zbee_red.add(zbee.src)
+                  #       #if zbee.dst != '0x0000fffd':
+                  #       #  if zbee.dst != '0x00000000':
+                  #       #    zbee_red.add(zbee.dst)
+                  #       if zbee.dst == '0x00000000':
+                  #         zbee_c.add(zbee.dst64)
 
-                      elif zbee.src == '0x00000000':
-                        zbee_c.add(zbee.src64)
-                        if zbee.dst != '0x0000fffd':
-                          if zbee.src_route == True:
-                            zbee_r.add(zbee.dst)
-                          elif zbee.src_route == False:
-                            zbee_ed.add(zbee.dst)
+                  #     elif zbee.src == '0x00000000':
+                  #       zbee_c.add(zbee.src64)
+                  #       if zbee.dst != '0x0000fffd':
+                  #         if zbee.src_route == True:
+                  #           zbee_r.add(zbee.dst)
+                  #         elif zbee.src_route == False:
+                  #           zbee_ed.add(zbee.dst)
                       
-                      continue
-                  except AttributeError:
-                    print(f'{frame.number} : attribute error')
+                  #     continue
+                  # except AttributeError:
+                  #   print(f'{frame.number} : attribute error')
                       
                 try:
                   if (zbee.data_len == '2') and (wpan.src64 != zbee.src64):
                     # 3
                     network_status = network_status + 1
+                    network_status_packets.append(frame.number)
                     # print(f'ns packet 3 : {frame.number}')
                     #csv_packet = 'network status packet'
     
@@ -513,6 +518,7 @@ def parse():
                   if (zbee.data_len == '2') and (wpan.src16 != zbee.src):
                     # 3
                     network_status = network_status + 1
+                    network_status_packets.append(frame.number)
                     # print(f'ns packet 3 : {frame.number}')
                     #csv_packet = 'network status packet'
     
@@ -539,6 +545,7 @@ def parse():
                   if zbee.dst == '0x0000fffd':
                     # 1
                     network_status = network_status + 1
+                    network_status_1.append(frame.number)
                     # print(f'ns packet 1 : {frame.number} : {zbee.dst}')
                     #csv_packet = 'network status packet'
   
@@ -564,6 +571,7 @@ def parse():
                   elif zbee.dst in zbee_ed:
                     # 1
                     network_status = network_status + 1
+                    network_status_1.append(frame.number)
                     # print(f'ns packet 1 : {frame.number} : {zbee.dst}')
                     #csv_packet = 'network status packet'
   
@@ -608,7 +616,8 @@ def parse():
                       zbee_r.add(zbee.dst)
                     elif zbee.dst == '0x00000000':
                       zbee_c.add(zbee.dst64)
-
+                    
+                    continue
                      
                   
                   if zbee.ext_dst == '1':
@@ -625,7 +634,8 @@ def parse():
                         zbee_r.add(zbee.dst)
                       elif zbee.dst == '0x00000000':
                         zbee_c.add(zbee.dst64)
-
+                      
+                      continue
                        
                     
                     if (zbee.dst != '0x0000fffd') and (wpan.src64 == zbee.src64) and (zbee.data_len == '2'):
@@ -641,24 +651,29 @@ def parse():
                         zbee_r.add(zbee.dst)
                       elif zbee.dst == '0x00000000':
                         zbee_c.add(zbee.dst64)
-
+                      
+                      continue
                        
   
                   if zbee.data_len == '4':
-                    if wpan.src64 == last_da:
-                      route_record = route_record + 1
-                      #csv_packet = 'route record packet'
-                      
-                      #if zbee.src != '0x00000000':
-                      #  zbee_red.add(zbee.src)
-                      if zbee.src == '0x00000000':
-                        zbee_c.add(zbee.src64)
-                      
-                      if zbee.dst != '0x00000000':
-                        zbee_r.add(zbee.dst)
-                      elif zbee.dst == '0x00000000':
-                        zbee_c.add(zbee.dst64)
-                      
+                    try:
+                      if wpan.src64 == last_da:
+                        route_record = route_record + 1
+                        #csv_packet = 'route record packet'
+                        
+                        #if zbee.src != '0x00000000':
+                        #  zbee_red.add(zbee.src)
+                        if zbee.src == '0x00000000':
+                          zbee_c.add(zbee.src64)
+                        
+                        if zbee.dst != '0x00000000':
+                          zbee_r.add(zbee.dst)
+                        elif zbee.dst == '0x00000000':
+                          zbee_c.add(zbee.dst64)
+                        
+                        continue
+                    except AttributeError:
+                      print(f'attribute error route record : {frame.number}')
                        
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # ~~~~~~~ WPAN.FRAME_TYPE == 0x01 ~~~~~~~
@@ -732,6 +747,21 @@ def parse():
 
     
     finish()
+
+    print(f"\nnetwork status packets 1: {len(network_status_1)}")
+    for p in network_status_1:
+      print(f"     {p}")
+
+    print(f"\nnetwork status packets 2 + 3: {len(network_status_packets)}")
+    for p in network_status_packets:
+      print(f"     {p}")
+
+    print(f"\nnetwork status packets 4: {len(network_status_4)}")
+    for p in network_status_4:
+      print(f"     {p}")
+
+
+
     print(f'mac : [network_id]\n{mac_network}')
 
     print("\n\nzbee coordinator addresses:")
@@ -757,8 +787,9 @@ def parse():
     print(f"number of route record packets : {route_record}")
     print(f"number of end device timeout request packets : {edt_request}")
     print(f"number of end device timeout response packets : {edt_response}")
-    print(f"number of leave packets : {leave_1} : {leave_2} : {leave_3 + len(leftover_packets)}")
+    print(f"number of leave packets : {leave_1} : {leave_2} : {leave_3 + len(check_response)}")
     print(f"number of rejoin request packets : {rejoin_request}")
+    print(sys.argv[1])
   else:
     print("please give me a file")
     sys.exit()  
