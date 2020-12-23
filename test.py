@@ -62,19 +62,39 @@ else:
 #  print(f'key {k} : val {type(v)}')
 
 
-y = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+# y = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
 
-for z in y:
-  print(z)
-  if z > 5:
-    if z == 6:
-      print('six')
+# for z in y:
+#   print(z)
+#   if z > 5:
+#     if z == 6:
+#       print('six')
+#       continue
+#     if z % 6 == 0:
+#       print('xis6')
+#   if z > 7:
+#     if z == 6:
+#       print(z)
+#     if z == 8:
+#       print('eight')
+
+
+test = [1, 2, 3, "c", 4, 5, 6]
+# print(type(1))
+for x in test:
+  try:
+    w = x + "hi"
+    print(w)
+  except TypeError:
+    if x == 4:
+      print(x)
       continue
-    if z % 6 == 0:
-      print('xis6')
-  if z > 7:
-    if z == 6:
-      print(z)
-    if z == 8:
-      print('eight')
 
+  try:
+    y = x + 1
+    if y == 3:
+      print(y)
+  except TypeError:
+    print(x)
+  
+  
