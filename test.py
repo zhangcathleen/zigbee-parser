@@ -95,18 +95,40 @@ b = 3
 #  except TypeError:
 #    print(x)
 
-c = [[1, 2, 3], [1, 2, 3], [1, 2, "b", 3], [5, 6, 7, 8, 9, 10]]
-d = []
+c = [ (1,"a"), (2,"b"), (3,"c"), (4,"d"), (5,"e") ]
+d = [ (1:"d"), 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 
-for i in c:
-  for m in i:
-    if isinstance(m, str):
-      d.append(m)
+#i = 0
+
+#while i < len(c):
+#  print(c[i])
+#  i += 1
+#  for m in i:
+#    if isinstance(m, str):
+#      d.append(m)
+#      continue
+#    elif isinstance(m, int):
+#      print(m)
+
+x = 0
+y = -1
+
+while x < len(c):
+  y += 1
+  pair = c[x]
+  elapsed = d[y] - pair[0]
+  if elapsed > 2:
+    if zbee.src == x[1]:
+      x[0] = frame.time_epoch
+      break
+    else:
+      print(elapsed)
+      try:
+        d_announce.pop(x)
+      except KeyError:
+        pass
       continue
-    elif isinstance(m, int):
-      print(m)
-
-
-print(c)
-print(d)
+  x += 1
+#print(c)
+#print(d)
 

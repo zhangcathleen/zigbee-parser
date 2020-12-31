@@ -69,7 +69,7 @@ def parse():
 
   # keeps track of all the device announcement zbee src 
   # a set => d_announce.add()
-  d_announce = set()
+  d_announce = []
 
   # keeps track of d_announce times (time : zbee src)
   d_time = []
@@ -180,17 +180,8 @@ def parse():
 #        csv_frame_num = frame.number
         wpan = pk.wpan
 
-        # goinf through the time in device announcement packets
-        # if > 2 min : remove from d_announce
-        for x in d_time:
-          elapsed = float(frame.time_epoch) - float(x[0])
-          if elapsed > 2:
-            try:
-              d_announce.remove(x[1])
-            except KeyError:
-              continue
-          else:
-            break
+
+        
         
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # ~~~~~~~ WPAN.CMD == 0x04 ~~~~~~~~~~~~~~
@@ -610,7 +601,29 @@ def parse():
                     
                     continue
 
-                  if zbee.src in d_announce:
+
+                  # goinf through the time in device announcement packets
+                  # if > 18 min (1080 seconds) : remove from d_announce
+                  x = 0
+                  while x < len(d_announce):
+                    item = d_announce[x]
+                    elapsed = float(frame.time_epoch) - float(item[0])
+                    src = item[1]
+                    if elapsed > 1080:
+                      # router's don't matter - exception!
+                      if src in zbee_r:
+                        pass
+                      else:
+                        try:
+                          d_announce.pop(x)
+                        except KeyError:
+                          pass
+                        x -= 1
+                    x += 1
+                    
+
+            
+                  if any(zbee.src in pair for pair in d_announce):
                     # 4 route record
                     route_record = route_record + 1
                     last_rr = wpan.src16
@@ -639,9 +652,9 @@ def parse():
             # dst : 0xfffd
             if (wpan.frame_type == '0x00000001'):
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
-                d_announce.add(zbee.src)
                 x = [frame.time_epoch, zbee.src]
-                d_time.append(x)
+                d_announce.append(x)                
+                # d_time.append(x)
                 continue
 
             
@@ -724,8 +737,9 @@ def parse():
     print(f'\nroute record packets 2 : {len(route_record_2)}')
     print(f'\nroute record packets 3 : {len(route_record_3)}')
     print(f'\nroute record packets 4 : {len(route_record_4)}')
-    for p in route_record_4:
-      print(f"     {p}")
+    print(route_record_4)
+    # for p in route_record_4:
+    #   print(f"     {p}")
 
 
 
@@ -764,19 +778,19 @@ def parse():
 # main ------------------------------------------------------------------------
 
 
-def main():
+# def main():
 
-  # 0 - neutral
-  # 1 - route request
-  # 2 - rejoin response
-  # 3 - link status
-  # 4 - network update
-  # 5 - route reply
-  # 6 - network report
-  # 7 - end device timeout request
-  # 8 - end device timeout response
-  parse()
+#   # 0 - neutral
+#   # 1 - route request
+#   # 2 - rejoin response
+#   # 3 - link status
+#   # 4 - network update
+#   # 5 - route reply
+#   # 6 - network report
+#   # 7 - end device timeout request
+#   # 8 - end device timeout response
+#   parse()
   
 
 if __name__ == "__main__":
-  main()
+  parse()
