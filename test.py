@@ -7,21 +7,19 @@ a = {1, 2, 3}
 b = 3
 #c = set((3))
 
-"""
-def a():
-  if len(sys.argv) == 2:
-      print(sys.argv)
-  else:
-    return print("hi")
-
-try:
-  while True:
-    a()
-except KeyboardInterrupt:
-    print("caught keyboard interrupt excep")
-else:
-    print("no exceps caught")
-"""
+#def a():
+#  if len(sys.argv) == 2:
+#      print(sys.argv)
+#  else:
+#    return print("hi")
+#
+#try:
+#  while True:
+#    a()
+#except KeyboardInterrupt:
+#    print("caught keyboard interrupt excep")
+#else:
+#    print("no exceps caught")
 
 #ca = c.isdisjoint(a)
 #ac = a.isjoint(c)
@@ -79,22 +77,36 @@ else:
 #       print('eight')
 
 
-test = [1, 2, 3, "c", 4, 5, 6]
-# print(type(1))
-for x in test:
-  try:
-    w = x + "hi"
-    print(w)
-  except TypeError:
-    if x == 4:
-      print(x)
-      continue
+#test = [1, 2, 3, "c", 4, 5, 6]
+## print(type(1))
+#for x in test:
+#  try:
+#    w = x + "hi"
+#    print(w)
+#  except TypeError:
+#    if x == 4:
+#      print(x)
+#      continue
+#
+#  try:
+#    y = x + 1
+#    if y == 3:
+#      print(y)
+#  except TypeError:
+#    print(x)
 
-  try:
-    y = x + 1
-    if y == 3:
-      print(y)
-  except TypeError:
-    print(x)
-  
-  
+c = [[1, 2, 3], [1, 2, 3], [1, 2, "b", 3], [5, 6, 7, 8, 9, 10]]
+d = []
+
+for i in c:
+  for m in i:
+    if isinstance(m, str):
+      d.append(m)
+      continue
+    elif isinstance(m, int):
+      print(m)
+
+
+print(c)
+print(d)
+

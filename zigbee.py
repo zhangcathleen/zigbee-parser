@@ -66,15 +66,13 @@ def parse():
   
   # frames that might network status packets, but need the ZED
   ns_pak = {}
-  
-#  # frames that might be end device timeout request or response packets,
-#  # but needs difference between ZED + ZR
-#  # dictionary - src : dst
-#  edt_pak = {}
 
   # keeps track of all the device announcement zbee src 
   # a set => d_announce.add()
   d_announce = set()
+
+  # keeps track of d_announce times (time : zbee src)
+  d_time = []
 
   # most recent route record (identified by device announcement) - WPAN SRC
   last_rr = ""
@@ -181,6 +179,18 @@ def parse():
 #        csv_protocol = frame.protocols
 #        csv_frame_num = frame.number
         wpan = pk.wpan
+
+        # goinf through the time in device announcement packets
+        # if > 2 min : remove from d_announce
+        for x in d_time:
+          elapsed = float(frame.time_epoch) - float(x[0])
+          if elapsed > 2:
+            try:
+              d_announce.remove(x[1])
+            except KeyError:
+              continue
+          else:
+            break
         
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # ~~~~~~~ WPAN.CMD == 0x04 ~~~~~~~~~~~~~~
@@ -262,10 +272,10 @@ def parse():
                             leave_3 = leave_3 + 1
                             leave_3_packets[time] = (ip[0], ip[1])
                             delete.append(time)
-                            try:
-                              d_announce.remove(ip[0])
-                            except KeyError:
-                              continue
+                            # try:
+                            #   d_announce.remove(ip[0])
+                            # except KeyError:
+                            #   continue
                     for t in delete:
                       del check_response[t]
 
@@ -296,20 +306,20 @@ def parse():
                   if (zbee.dst == '0x0000fffd') or (zbee.dst in zbee_ed): # 1
                     leave_1 = leave_1 + 1
                     leave_packets[frame.number] = (zbee.src, zbee.dst)
-                    try:
-                      d_announce.remove(zbee.src)
-                    except KeyError:
-                      pass
+                    # try:
+                    #   d_announce.remove(zbee.src)
+                    # except KeyError:
+                    #   pass
                     continue
                      
                   if (zbee.dst != '0x0000fffc'):
                     if (zbee.src == '0x00000000'): # 2
                       leave_2 = leave_2 + 1
                       leave_packets[frame.number] = (zbee.src, zbee.dst)
-                      try:
-                        d_announce.remove(zbee.src)
-                      except KeyError:
-                        pass
+                      # try:
+                      #   d_announce.remove(zbee.src)
+                      # except KeyError:
+                      #   pass
                       continue
                        
                     else: # 3
@@ -630,6 +640,8 @@ def parse():
             if (wpan.frame_type == '0x00000001'):
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
                 d_announce.add(zbee.src)
+                x = [frame.time_epoch, zbee.src]
+                d_time.append(x)
                 continue
 
             
@@ -712,6 +724,8 @@ def parse():
     print(f'\nroute record packets 2 : {len(route_record_2)}')
     print(f'\nroute record packets 3 : {len(route_record_3)}')
     print(f'\nroute record packets 4 : {len(route_record_4)}')
+    for p in route_record_4:
+      print(f"     {p}")
 
 
 
