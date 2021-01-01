@@ -622,6 +622,10 @@ def parse():
                     x += 1
                     
 
+                  if frame.number == '26747':
+                    print(d_announce)
+                  if frame.number == '27155':
+                    print(d_announce)
             
                   if any(zbee.src in pair for pair in d_announce):
                     # 4 route record
@@ -730,6 +734,7 @@ def parse():
     print(f"\nnetwork status packets 3 : {len(network_status_3)}")
 
     print(f"\nnetwork status packets 4 : {len(network_status_4)}")
+    # print(network_status_4)
     # for p in network_status_4:
     #   print(f"     {p}")
 
@@ -737,7 +742,7 @@ def parse():
     print(f'\nroute record packets 2 : {len(route_record_2)}')
     print(f'\nroute record packets 3 : {len(route_record_3)}')
     print(f'\nroute record packets 4 : {len(route_record_4)}')
-    print(route_record_4)
+    # print(route_record_4)
     # for p in route_record_4:
     #   print(f"     {p}")
 
