@@ -527,7 +527,7 @@ def parse():
                 if (zbee.data_len == '2') and (wpan.src16 != zbee.src):
                   # 3
                   network_status = network_status + 1
-                  network_status_3.append(frame.number)
+                  network_status_4.append(frame.number)
                   # print(f'ns packet 3 : {frame.number}')
                   #csv_packet = 'network status packet'
   
@@ -595,7 +595,7 @@ def parse():
                   if zbee.ext_dst == '1' and zbee.dst != '0x0000fffd' and wpan.src16 == zbee.src and zbee.data_len == '2':
                     # 3
                     route_record = route_record + 1
-                    route_record_3.append(frame.number)
+                    route_record_4.append(frame.number)
                     #csv_packet = 'route record packet'
                     
                     #if zbee.src != '0x00000000':
