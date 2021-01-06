@@ -557,7 +557,7 @@ def parse():
                 
                 if zbee.dst != '0x0000fffc':
                   if ((zbee.data_len == '6') or (zbee.data_len == '8') or (zbee.data_len == '10')):
-                    # 1
+                    # 1 route record
                     route_record = route_record + 1
                     route_record_1.append(frame.number)
                     #csv_packet = 'route record packet'
@@ -575,7 +575,7 @@ def parse():
                     continue
                    
                   if zbee.ext_dst == '1' and (zbee.data_len != '2') and (zbee.data_len != '4') and (zbee.data_len != '6') and (zbee.data_len != '8') and (wpan.src16 != zbee.src):
-                    # 2
+                    # 2 route record
                     route_record = route_record + 1
                     route_record_2.append(frame.number)
                     #csv_packet = 'route record packet'
@@ -592,12 +592,30 @@ def parse():
                     
                     continue
                       
+                  a = d_announce[0]
+                  b = d_announce[1]
+
                   if zbee.ext_dst == '1' and zbee.dst != '0x0000fffd' and wpan.src16 == zbee.src and zbee.data_len == '2':
-                    # 3
+                    # 3 route record
                     route_record = route_record + 1
                     route_record_4.append(frame.number)
                     #csv_packet = 'route record packet'
                     
+                    previous[5] == False
+                    if zbee.src == a:
+                      if wpan.src16 == a:
+                        if wpan.dst16 == b:
+                          ab0 = False
+                        elif wpan.dst16 == '0x00000000':
+                          ab0 = True
+                    elif zbee.src == b:
+                      if wpan.src16 == b:
+                        if wpan.dst16 == '0x00000000':
+                          ab0 = False
+                          ba0 = True
+                        elif wpan.dst16 == a:
+                          ba0 = False
+
                     #if zbee.src != '0x00000000':
                     #  zbee_red.add(zbee.src)
                     if zbee.src == '0x00000000':
@@ -629,8 +647,7 @@ def parse():
                 previous = [zbee.src, zbee.dst, wpan.src16, wpan.dst16, zbee.data_len, None]
                 if len(d_announce) == 0:
                   continue
-                a = d_announce[0]
-                b = d_announce[1]
+                
 
                 if zbee.data_len == '2':
                   route_record_3_2.append(frame.number)
@@ -860,25 +877,33 @@ def parse():
     #   print(f"     {p}")
 
     print(f"\nnetwork status packets 3 1 : {len(network_status_3_1)}")
+    print(network_status_3_1)
     print(f"\nnetwork status packets 3 2 : {len(network_status_3_2)}")
+    print(network_status_3_2)
     print(f"\nnetwork status packets 3 3 : {len(network_status_3_3)}")
+    print(network_status_3_3)
     print(f"\nnetwork status packets 3 4 : {len(network_status_3_4)}")
+    print(network_status_3_4)
     # print(network_status_3)
 
     print(f"\nnetwork status packets 4 : {len(network_status_4)}")
-    print(network_status_4)
+    # print(network_status_4)
     # for p in network_status_4:
     #   print(f"     {p}")
 
     print(f'\nroute record packets 1 : {len(route_record_1)}')
     print(f'\nroute record packets 2 : {len(route_record_2)}')
     print(f'\nroute record packets 3 1 : {len(route_record_3_1)}')
+    print(route_record_3_1)
     print(f'\nroute record packets 3 2 : {len(route_record_3_2)}')
+    print(route_record_3_2)
     print(f'\nroute record packets 3 3 : {len(route_record_3_3)}')
+    print(route_record_3_3)
     print(f'\nroute record packets 3 4 : {len(route_record_3_4)}')
+    print(route_record_3_4)
     # print(route_record_3)
     print(f'\nroute record packets 4 : {len(route_record_4)}')
-    print(route_record_4)
+    # print(route_record_4)
     # for p in route_record_4:
     #   print(f"     {p}")
 
@@ -898,8 +923,8 @@ def parse():
     for ed in zbee_ed:
       print(f"     {ed}")
 
-    network_status = len(network_status_1) + len(network_status_2) + len(network_status_3) + len(network_status_4)
-    route_record = len(route_record_1) + len(route_record_2) + len(route_record_3) + len(route_record_4)
+    network_status = len(network_status_1) + len(network_status_2) + len(network_status_3_1) + len(network_status_3_2) + len(network_status_3_3) + len(network_status_3_4) + len(network_status_4)
+    route_record = len(route_record_1) + len(route_record_2) + len(route_record_3_1) + len(route_record_3_2) + len(route_record_3_3) + len(route_record_3_4) + len(route_record_4)
     print("\n\n\n")
     print(f"number of rejoin response packets : {rejoin_response}")
     print(f"number of network report packets : {network_report}")
