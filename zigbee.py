@@ -211,9 +211,9 @@ def parse():
 #        csv_frame_num = frame.number
         wpan = pk.wpan
 
-        if frame.number == '24222':
-          print(d_announce)
-          print(ab0)
+        # if frame.number == '24222':
+        #   print(d_announce)
+        #   print(ab0)
         
         
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -471,6 +471,8 @@ def parse():
 
 
 
+                a = d_announce[0]
+                b = d_announce[1]
 
                 # ===== network status packets ========
                 # dst : zc, zr, zed, 0xfffd
