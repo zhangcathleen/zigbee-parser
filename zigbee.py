@@ -710,80 +710,7 @@ def parse():
                         network_status_3_2.append(frame.number)
                         previous[5] = True
                         continue
-                # if zbee.data_len == '4':
-                #   if zbee.src == last_rr:
-                #     # 4 network status
-                #     # print(f'{frame.number} network status : {zbee.src}')
-                #     network_status = network_status + 1
-                #     network_status_4.append(frame.number)
-                #     # print(f'ns packet 4 : {frame.number} : {last_da}')
-                #     #csv_packet = 'network status packet'
-  
-                #     if zbee.src != '0x00000000':
-                #     # zbee_red.add(zbee.src)
-                #       #if zbee.dst != '0x0000fffd':
-                #       #  if zbee.dst != '0x00000000':
-                #       #    zbee_red.add(zbee.dst)
-                #       if zbee.dst == '0x00000000':
-                #         zbee_c.add(zbee.dst64)
 
-                #     elif zbee.src == '0x00000000':
-                #       zbee_c.add(zbee.src64)
-                #       if zbee.dst != '0x0000fffd':
-                #         if zbee.src_route == True:
-                #           zbee_r.add(zbee.dst)
-                #         elif zbee.src_route == False:
-                #           zbee_ed.add(zbee.dst)
-                    
-                #     continue
-
-
-                #   # goinf through the time in device announcement packets
-                #   # if > 18 min (1080 seconds) : remove from d_announce
-                #   x = 0
-                #   while x < len(d_announce):
-                #     item = d_announce[x]
-                #     elapsed = float(frame.time_epoch) - float(item[0])
-                #     src = item[1]
-                #     if elapsed > 1080:
-                #       # router's don't matter - exception!
-                #       if src in zbee_r:
-                #         pass
-                #       else:
-                #         try:
-                #           d_announce.pop(x)
-                #         except KeyError:
-                #           pass
-                #         x -= 1
-                #     x += 1
-                    
-
-                #   if frame.number == '26747':
-                #     print(d_announce)
-                #   if frame.number == '27155':
-                #     print(d_announce)
-            
-                #   if any(zbee.src in pair for pair in d_announce):
-                #     # 4 route record
-                #     route_record = route_record + 1
-                #     last_rr = wpan.src16
-                #     route_record_4.append(frame.number)
-                #     # print(f'{frame.number} route record {zbee.src} == last da {last_da}')
-                #     # print(f'route record wpan : {wpan.src16}')
-                #     #csv_packet = 'route record packet'
-                    
-                #     #if zbee.src != '0x00000000':
-                #     #  zbee_red.add(zbee.src)
-                #     if zbee.src == '0x00000000':
-                #       zbee_c.add(zbee.src64)
-                    
-                #     if zbee.dst != '0x00000000':
-                #       zbee_r.add(zbee.dst)
-                #     elif zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-                    
-                #     continue
-                       
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # ~~~~~~~ WPAN.FRAME_TYPE == 0x01 ~~~~~~~
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -818,48 +745,6 @@ def parse():
       print("\n\nINTERRRUPPTEDDDD")
     
 
-#    zbee_ed = zbee_red.difference(zbee_r)
- 
-    # # check if the network status dst is end device
-    # for nid in ns_pak:
-    #   if nid in zbee_ed:
-    #     network_status = network_status + 1
-
-#    # checking if the leave dst is an end device 
-#    # if yes:
-#    #   add 1 to leave
-#    #   add to network_mac[network id] = mac
-#    for nid, mac in leave_zed.items():
-#      if nid in zbee_ed:
-#        leave_1 = leave_1 + 1
-#        network_mac[nid] = mac
-
-    # check leave_pakckets
-    # print(f'leave 1 + 2 :\n\n  {leave_packets}')
-    # print(f'leave 3 : \n\n {leave_3_packets}')
-    # print(f'rejoin request : \n\n {request_packets}')
-    # print(f'left over packets :\n\n  {check_response}')
-#    leave_3 = leave_3 + len(check_response)
-
-#    # check if the rejoin_request_zed is an end device
-#    # if yes:
-#    #   skip
-#    # if no:
-#    #   add 1 to rejoin request
-#    #   add to network_mac[network id] = mac
-#    for nid, mac in rejoin_request_zed.items():
-#      if nid in zbee_ed:
-#        continue
-#      else:
-#        rejoin_request = rejoin_request + 1
-#        network_mac[nid] = mac
-
-
-
-
-
-    # swapping network : mac -> mac : network
-#    print(f'network_id : [mac]\n{network_mac}')
     mac_network = {}
     for network, mac in network_mac.items():
       try:
@@ -944,22 +829,6 @@ def parse():
   else:
     print("please give me a file")
     sys.exit()  
-
-# main ------------------------------------------------------------------------
-
-
-# def main():
-
-#   # 0 - neutral
-#   # 1 - route request
-#   # 2 - rejoin response
-#   # 3 - link status
-#   # 4 - network update
-#   # 5 - route reply
-#   # 6 - network report
-#   # 7 - end device timeout request
-#   # 8 - end device timeout response
-#   parse()
   
 
 if __name__ == "__main__":
