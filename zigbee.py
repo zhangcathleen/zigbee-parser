@@ -164,6 +164,14 @@ def parse():
   # route record packets 4
   route_record_4 = []
 
+  # keeps track of the main router
+  # comes from the first device announcement
+  da_main = ""
+
+  # help identify the route records data.len 4 that come before the device anouncments
+  rra = ""
+  rrb = ""
+
 
 #  # frames that might be leave packets, but need the ZED
 #  # maps network_id : mac_id
@@ -184,7 +192,7 @@ def parse():
   leave_3 = 0
   rejoin_request = 0
 
-  csv_file = "results.csv"
+  # csv_file = "results.csv"
 
   if no >= 2:
     path = sys.argv[1]
@@ -650,6 +658,7 @@ def parse():
                 if len(d_announce) == 0:
                   continue
                 
+                
 
                 if zbee.data_len == '2':
                   route_record_3_2.append(frame.number)
@@ -667,6 +676,12 @@ def parse():
                         ba0 = True
                       elif wpan.dst16 == a:
                         ba0 = False
+                  elif zbee.src != a and zbee.src != b: 
+                    if zbee.src == wpan.src16 and zbee.dst == '0x00000000' and wpan.src16 != wpan.dst16 and wpan.dst16 == da_main:
+                      if frame.number == '26392':
+                        print("ues")
+                      rra = zbee.src
+                      rrb = wpan.dst16
                 elif zbee.data_len == '4':
                   if zbee.src == a:
                     if wpan.src16 == b and wpan.dst16 == '0x00000000':
@@ -694,7 +709,6 @@ def parse():
                     elif wpan.src16 == a and wpan.dst16 == b:
                       network_status_3_2.append(frame.number)
                       previous[5] = True
-                      
                     elif wpan.src16 == b:
                       if wpan.dst16 == '0x00000000':
                         ab0 = False
@@ -704,6 +718,12 @@ def parse():
                         ba0 = True
                         network_status_3_2.append(frame.number)
                         previous[5] = True
+                  elif zbee.src == rra and wpan.src16 == rrb:
+                    if zbee.dst == '0x00000000' and wpan.dst16 == '0x00000000':
+                      if frame.number == '26396':
+                        print("yes")
+                      route_record_3_2.append(frame.number)
+                      previous[5] = False
 
             # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             # ~~~~~~~ WPAN.FRAME_TYPE == 0x01 ~~~~~~~
@@ -715,6 +735,8 @@ def parse():
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
                 # x = [frame.time_epoch, zbee.src]
                 ab0 = False
+                if not da_main:
+                  da_main = zbee.src
                 if wpan.src16 == zbee.src or wpan.src16 == '0x00000000' or wpan.src16 == '0x0000ffff':
                   if wpan.dst16 == zbee.src or wpan.dst16 == '0x00000000' or wpan.dst16 == '0x0000ffff':
                     continue
@@ -748,6 +770,10 @@ def parse():
 
     
     finish()
+
+    f = open("results.txt", "w")
+    f.write(f"{network_status_3_1}\n{network_status_3_2}\n{network_status_3_3}\n{network_status_3_4}\n{route_record_3_1}\n{route_record_3_2}\n{route_record_3_3}\n{route_record_3_4}")
+    f.close()
 
     print(f"\nnetwork status packets 1 : {len(network_status_1)}")
     # for p in network_status_1:
