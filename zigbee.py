@@ -667,6 +667,7 @@ def parse():
                     if wpan.src16 == a:
                       if wpan.dst16 == b:
                         ab0 = False
+                        ba0 = False
                       elif wpan.dst16 == '0x00000000':
                         ab0 = True
                   elif zbee.src == b:
@@ -678,37 +679,41 @@ def parse():
                         ba0 = False
                   elif zbee.src != a and zbee.src != b: 
                     if zbee.src == wpan.src16 and zbee.dst == '0x00000000' and wpan.src16 != wpan.dst16 and wpan.dst16 == da_main:
-                      if frame.number == '26392':
-                        print("ues")
                       rra = zbee.src
                       rrb = wpan.dst16
                 elif zbee.data_len == '4':
                   if zbee.src == a:
-                    if wpan.src16 == b and wpan.dst16 == '0x00000000':
-                      if ab0:
-                        network_status_3_3.append(frame.number)
+                    if wpan.src16 == b:
+                      if wpan.dst16 == '0x00000000':
+                        if ab0:
+                          network_status_3_3.append(frame.number)
+                          previous[5] = True
+                        else:
+                          route_record_3_3.append(frame.number)
+                          previous[5] = False
+                      elif wpan.dst16 == a:
+                        network_status_3_2.append(frame.number)
+                        previous[5] = True
+                    elif wpan.src16 == a:
+                      if wpan.dst16 == b or wpan.dst16 == '0x00000000':
+                        ab0 = True
+                        network_status_3_2.append(frame.number)
                         previous[5] = True
                       else:
-                        route_record_3_3.append(frame.number)
-                        previous[5] = False
-                    elif wpan.src16 == b and wpan.dst16 == a:
-                      network_status_3_2.append(frame.number)
-                      previous[5] = True
-                    elif wpan.src16 == a and (wpan.dst16 == b or wpan.dst16 == '0x00000000'):
-                      ab0 = True
-                      network_status_3_2.append(frame.number)
-                      previous[5] = True
+                        network_status_3_2.append(frame.number)
+                        previous[5] = True
                   elif zbee.src == b:
-                    if wpan.src16 == a and wpan.dst16 == '0x00000000':
-                      if ba0:
-                        network_status_3_4.append(frame.number)
+                    if wpan.src16 == a:
+                      if wpan.dst16 == '0x00000000':
+                        if ba0:
+                          network_status_3_4.append(frame.number)
+                          previous[5] = True
+                        else:
+                          route_record_3_4.append(frame.number)
+                          previous[5] = False
+                      if wpan.dst16 == b:
+                        network_status_3_2.append(frame.number)
                         previous[5] = True
-                      else:
-                        route_record_3_4.append(frame.number)
-                        previous[5] = False
-                    elif wpan.src16 == a and wpan.dst16 == b:
-                      network_status_3_2.append(frame.number)
-                      previous[5] = True
                     elif wpan.src16 == b:
                       if wpan.dst16 == '0x00000000':
                         ab0 = False
@@ -718,10 +723,11 @@ def parse():
                         ba0 = True
                         network_status_3_2.append(frame.number)
                         previous[5] = True
+                      else:
+                        network_status_3_2.append(frame.number)
+                        previous[5] = True
                   elif zbee.src == rra and wpan.src16 == rrb:
                     if zbee.dst == '0x00000000' and wpan.dst16 == '0x00000000':
-                      if frame.number == '26396':
-                        print("yes")
                       route_record_3_2.append(frame.number)
                       previous[5] = False
 
@@ -735,6 +741,7 @@ def parse():
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
                 # x = [frame.time_epoch, zbee.src]
                 ab0 = False
+                ba0 = False
                 if not da_main:
                   da_main = zbee.src
                 if wpan.src16 == zbee.src or wpan.src16 == '0x00000000' or wpan.src16 == '0x0000ffff':
