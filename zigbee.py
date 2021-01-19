@@ -685,51 +685,43 @@ def parse():
                       rra = zbee.src                
                       rrb = wpan.dst16
                 elif zbee.data_len == '4':
+                  previous[5] = True
                   if zbee.src == a:
                     if wpan.src16 == b:
                       if wpan.dst16 == '0x00000000':
                         if ab0:
                           network_status_3_3.append(frame.number)
-                          previous[5] = True
                           # ab0 = False
                         else:
                           route_record_3_3.append(frame.number)
                           previous[5] = False
                       elif wpan.dst16 == a:
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                     elif wpan.src16 == a:
                       if wpan.dst16 == b or wpan.dst16 == '0x00000000':
                         ab0 = True
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                       else:
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                   elif zbee.src == b:
                     if wpan.src16 == a:
                       if wpan.dst16 == '0x00000000':
                         if ba0:
                           network_status_3_4.append(frame.number)
-                          previous[5] = True
                         else:
                           route_record_3_4.append(frame.number)
                           previous[5] = False
                       if wpan.dst16 == b:
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                     elif wpan.src16 == b:
                       if wpan.dst16 == '0x00000000':
                         ab0 = False
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                       elif wpan.dst16 == a:
                         ba0 = True
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                       else:
                         network_status_3_2.append(frame.number)
-                        previous[5] = True
                   elif zbee.src == da_rando and zbee.dst == '0x00000000' and wpan.src16 == da_main and wpan.dst16 == '0x00000000':
                     route_record_3_2.append(frame.number)
                     previous[5] = False
@@ -747,7 +739,7 @@ def parse():
             if (wpan.frame_type == '0x00000001'):
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
                 # x = [frame.time_epoch, zbee.src]
-                # ab0 = False
+                ab0 = False
                 # ba0 = False
                 if not da_main:
                   da_main = zbee.src
@@ -792,49 +784,49 @@ def parse():
     f.write(f"{network_status_3_1}\n{network_status_3_2}\n{network_status_3_3}\n{network_status_3_4}\n{route_record_3_1}\n{route_record_3_2}\n{route_record_3_3}\n{route_record_3_4}")
     f.close()
 
-    print(f"\nnetwork status packets 1 : {len(network_status_1)}")
-    # for p in network_status_1:
-    #   print(f"     {p}")
+    # print(f"\nnetwork status packets 1 : {len(network_status_1)}")
+    # # for p in network_status_1:
+    # #   print(f"     {p}")
 
-    print(f"\nnetwork status packets 2 : {len(network_status_2)}")
-    print(network_status_2)
-    # for p in network_status_packets:
-    #   print(f"     {p}")
+    # print(f"\nnetwork status packets 2 : {len(network_status_2)}")
+    # print(network_status_2)
+    # # for p in network_status_packets:
+    # #   print(f"     {p}")
 
-    print(f"\nnetwork status packets 3 1 : {len(network_status_3_1)}")
-    print(network_status_3_1)
-    print(f"\nnetwork status packets 3 2 : {len(network_status_3_2)}")
-    print(network_status_3_2)
-    print(f"\nnetwork status packets 3 3 : {len(network_status_3_3)}")
-    print(network_status_3_3)
-    print(f"\nnetwork status packets 3 4 : {len(network_status_3_4)}")
-    print(network_status_3_4)
-    # print(network_status_3)
+    # print(f"\nnetwork status packets 3 1 : {len(network_status_3_1)}")
+    # print(network_status_3_1)
+    # print(f"\nnetwork status packets 3 2 : {len(network_status_3_2)}")
+    # print(network_status_3_2)
+    # print(f"\nnetwork status packets 3 3 : {len(network_status_3_3)}")
+    # print(network_status_3_3)
+    # print(f"\nnetwork status packets 3 4 : {len(network_status_3_4)}")
+    # print(network_status_3_4)
+    # # print(network_status_3)
 
-    print(f"\nnetwork status packets 4 : {len(network_status_4)}")
-    # print(network_status_4)
-    # for p in network_status_4:
-    #   print(f"     {p}")
+    # print(f"\nnetwork status packets 4 : {len(network_status_4)}")
+    # # print(network_status_4)
+    # # for p in network_status_4:
+    # #   print(f"     {p}")
 
-    print(f'\nroute record packets 1 : {len(route_record_1)}')
-    print(f'\nroute record packets 2 : {len(route_record_2)}')
-    print(f'\nroute record packets 3 1 : {len(route_record_3_1)}')
-    print(route_record_3_1)
-    print(f'\nroute record packets 3 2 : {len(route_record_3_2)}')
-    print(route_record_3_2)
-    print(f'\nroute record packets 3 3 : {len(route_record_3_3)}')
-    print(route_record_3_3)
-    print(f'\nroute record packets 3 4 : {len(route_record_3_4)}')
-    print(route_record_3_4)
-    # print(route_record_3)
-    print(f'\nroute record packets 4 : {len(route_record_4)}')
-    print(route_record_4)
-    # for p in route_record_4:
-    #   print(f"     {p}")
+    # print(f'\nroute record packets 1 : {len(route_record_1)}')
+    # print(f'\nroute record packets 2 : {len(route_record_2)}')
+    # print(f'\nroute record packets 3 1 : {len(route_record_3_1)}')
+    # print(route_record_3_1)
+    # print(f'\nroute record packets 3 2 : {len(route_record_3_2)}')
+    # print(route_record_3_2)
+    # print(f'\nroute record packets 3 3 : {len(route_record_3_3)}')
+    # print(route_record_3_3)
+    # print(f'\nroute record packets 3 4 : {len(route_record_3_4)}')
+    # print(route_record_3_4)
+    # # print(route_record_3)
+    # print(f'\nroute record packets 4 : {len(route_record_4)}')
+    # print(route_record_4)
+    # # for p in route_record_4:
+    # #   print(f"     {p}")
 
 
 
-    print(f'\nmac : [network_id]\n{mac_network}')
+    print(f'\nmac : network_id\n{mac_network}')
 
     print("\n\nzbee coordinator addresses:")
     for c in zbee_c:
@@ -851,18 +843,20 @@ def parse():
     network_status = len(network_status_1) + len(network_status_2) + len(network_status_3_1) + len(network_status_3_2) + len(network_status_3_3) + len(network_status_3_4) + len(network_status_4)
     route_record = len(route_record_1) + len(route_record_2) + len(route_record_3_1) + len(route_record_3_2) + len(route_record_3_3) + len(route_record_3_4) + len(route_record_4)
     print("\n\n\n")
-    print(f"number of rejoin response packets : {rejoin_response}")
-    print(f"number of network report packets : {network_report}")
-    print(f"number of route reply packets : {route_reply}")
-    print(f"number of network update packets : {network_update}")
-    print(f"number of link status packets : {link_status}")
     print(f"number of route request packets : {route_request}")
+    print(f"number of route reply packets : {route_reply}")
     print(f"number of network status packets : {network_status}")
+    # print(f"number of leave packets : {leave_1} : {leave_2} : {leave_3 + len(check_response)}")
+    print(f"number of leave packets : {leave_1 + leave_2 + leave_3 + len(check_response)}")
     print(f"number of route record packets : {route_record}")
+    print(f"number of rejoin request packets : {rejoin_request}")
+    print(f"number of rejoin response packets : {rejoin_response}")
+    print(f"number of link status packets : {link_status}")
+    print(f"number of network report packets : {network_report}")
+    print(f"number of network update packets : {network_update}")
     print(f"number of end device timeout request packets : {edt_request}")
     print(f"number of end device timeout response packets : {edt_response}")
-    print(f"number of leave packets : {leave_1} : {leave_2} : {leave_3 + len(check_response)}")
-    print(f"number of rejoin request packets : {rejoin_request}")
+    print("")
     print(sys.argv[1])
   else:
     print("please give me a file")
