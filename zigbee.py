@@ -172,6 +172,9 @@ def parse():
   rra = ""
   rrb = ""
 
+  # helps identify the route records data.len 4 w/ packets that are mixed up w the device announcements
+  da_rando = ""
+
 
 #  # frames that might be leave packets, but need the ZED
 #  # maps network_id : mac_id
@@ -679,7 +682,7 @@ def parse():
                         ba0 = False
                   elif zbee.src != a and zbee.src != b: 
                     if zbee.src == wpan.src16 and zbee.dst == '0x00000000' and wpan.src16 != wpan.dst16 and wpan.dst16 == da_main:
-                      rra = zbee.src
+                      rra = zbee.src                
                       rrb = wpan.dst16
                 elif zbee.data_len == '4':
                   if zbee.src == a:
@@ -688,6 +691,7 @@ def parse():
                         if ab0:
                           network_status_3_3.append(frame.number)
                           previous[5] = True
+                          # ab0 = False
                         else:
                           route_record_3_3.append(frame.number)
                           previous[5] = False
@@ -726,6 +730,9 @@ def parse():
                       else:
                         network_status_3_2.append(frame.number)
                         previous[5] = True
+                  elif zbee.src == da_rando and zbee.dst == '0x00000000' and wpan.src16 == da_main and wpan.dst16 == '0x00000000':
+                    route_record_3_2.append(frame.number)
+                    previous[5] = False
                   elif zbee.src == rra and wpan.src16 == rrb:
                     if zbee.dst == '0x00000000' and wpan.dst16 == '0x00000000':
                       route_record_3_2.append(frame.number)
@@ -740,16 +747,19 @@ def parse():
             if (wpan.frame_type == '0x00000001'):
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
                 # x = [frame.time_epoch, zbee.src]
-                ab0 = False
-                ba0 = False
+                # ab0 = False
+                # ba0 = False
                 if not da_main:
                   da_main = zbee.src
                 if wpan.src16 == zbee.src or wpan.src16 == '0x00000000' or wpan.src16 == '0x0000ffff':
                   if wpan.dst16 == zbee.src or wpan.dst16 == '0x00000000' or wpan.dst16 == '0x0000ffff':
+                    da_rando = zbee.src
                     continue
                   else:
+                    da_rando = ""
                     x = [zbee.src, wpan.dst16]
                 else:
+                  da_rando = ""
                   x = [zbee.src, wpan.src16]
                 # if x not in d_announce:
                 #   d_announce.append(x)
