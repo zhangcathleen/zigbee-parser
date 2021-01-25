@@ -488,6 +488,9 @@ def parse():
                 a = d_announce[0]
                 try:
                   b = d_announce[1]
+                except IndexError:
+                  b = False
+                try:
                   c = d_announce[2]
                   d = d_announce[3]
                 except IndexError:
@@ -803,6 +806,10 @@ def parse():
     
     finish()
 
+    # writes into results file
+    # call ./checker.py (authomatically pulls from results)
+    # input frame numbers into checker
+    # test.txt will contain which ones are in and which ones aren't
     f = open("results.txt", "w")
     f.write(f"{network_status_3_1}\n{network_status_3_2}\n{network_status_3_3}\n{network_status_3_4}\n{route_record_3_1}\n{route_record_3_2}\n{route_record_3_3}\n{route_record_3_4}")
     f.close()
