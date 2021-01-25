@@ -61,16 +61,19 @@ def parse():
   # zigbee end devices - stored as 16bit
   zbee_ed = set()
   
-  # the ones that can't be distinguished between zigbee router + end devices
-  zbee_red = set()
+  # # the ones that can't be distinguished between zigbee router + end devices
+  # zbee_red = set()
   
   # frames that might network status packets, but need the ZED
-  ns_pak = {}
+  # ns_pak = {}
 
-  # keeps track of the previous device announcement zbee src + wpan src/dst
-  # x = [zbee.src, wpan.dst]
-  # a list => d_announce.append(x)
-  d_announce = [0, 0]
+  # # keeps track of the previous device announcement zbee src + wpan src/dst
+  # # x = [zbee.src, wpan.dst]
+  # # a list => d_announce.append(x)
+  # d_announce = [0, 0]
+
+  # keeps track of the device announcement + devices
+  d_announce = []
 
   # keeps track of the previous packets for a -> b 0 (4)
   # helps identify network status & device announcement
@@ -174,6 +177,9 @@ def parse():
 
   # helps identify the route records data.len 4 w/ packets that are mixed up w the device announcements
   da_rando = ""
+
+  # keeps track of the last device announcement time
+  da_time = 0
 
 
 #  # frames that might be leave packets, but need the ZED
@@ -484,6 +490,8 @@ def parse():
 
                 a = d_announce[0]
                 b = d_announce[1]
+                c = d_announce[2]
+                d = d_announce[3]
 
                 # # ===== network status packets ========
                 # # dst : zc, zr, zed, 0xfffd
@@ -738,27 +746,39 @@ def parse():
             # dst : 0xfffd
             if (wpan.frame_type == '0x00000001'):
               if (zbee.frame_type == '0x00000000') and (zbee.data_len == '20') and (zbee.dst == '0x0000fffd'):
+
+                # if elapsed > 1 sec = new device announcement set
+                # if elapsed < 1 sec = same da set
+                t = float(frame.time_epoch)
+                if t - da_time > 60:
+                  d_announce = [zbee.src]
+                da_time = t
+
                 # x = [frame.time_epoch, zbee.src]
                 ab0 = False
                 # ba0 = False
+
+                # for the first da = "main"
                 if not da_main:
                   da_main = zbee.src
-                if wpan.src16 == zbee.src or wpan.src16 == '0x00000000' or wpan.src16 == '0x0000ffff':
-                  if wpan.dst16 == zbee.src or wpan.dst16 == '0x00000000' or wpan.dst16 == '0x0000ffff':
+                
+                # checks wpan src + dst & makes sure not already added, 0x0000, or 0xffff
+                ws = wpan.src16
+                if ws in d_announce or ws == '0x00000000' or ws == '0x0000ffff':
+                  wd = wpan.dst16
+                  if wd in d_announce or wd == '0x00000000' or wd == '0x0000ffff':
                     da_rando = zbee.src
                     continue
                   else:
                     da_rando = ""
-                    x = [zbee.src, wpan.dst16]
+                    d_announce.append(wd)
                 else:
                   da_rando = ""
-                  x = [zbee.src, wpan.src16]
-                # if x not in d_announce:
-                #   d_announce.append(x)
-                # d_time.append(x)
-                d_announce = x
+                  d_announce.append(ws)
+
                 previous = [0, 0, 0, 0, 0, None]
                 continue
+              
 
             
             
@@ -843,20 +863,33 @@ def parse():
     network_status = len(network_status_1) + len(network_status_2) + len(network_status_3_1) + len(network_status_3_2) + len(network_status_3_3) + len(network_status_3_4) + len(network_status_4)
     route_record = len(route_record_1) + len(route_record_2) + len(route_record_3_1) + len(route_record_3_2) + len(route_record_3_3) + len(route_record_3_4) + len(route_record_4)
     print("\n\n\n")
-    print(f"number of route request packets : {route_request}")
-    print(f"number of route reply packets : {route_reply}")
-    print(f"number of network status packets : {network_status}")
-    # print(f"number of leave packets : {leave_1} : {leave_2} : {leave_3 + len(check_response)}")
-    print(f"number of leave packets : {leave_1 + leave_2 + leave_3 + len(check_response)}")
-    print(f"number of route record packets : {route_record}")
-    print(f"number of rejoin request packets : {rejoin_request}")
+    # print(f"number of route request packets : {route_request}")
+    # print(f"number of route reply packets : {route_reply}")
+    # print(f"number of network status packets : {network_status}")
+    # # print(f"number of leave packets : {leave_1} : {leave_2} : {leave_3 + len(check_response)}")
+    # print(f"number of leave packets : {leave_1 + leave_2 + leave_3 + len(check_response)}")
+    # print(f"number of route record packets : {route_record}")
+    # print(f"number of rejoin request packets : {rejoin_request}")
+    # print(f"number of rejoin response packets : {rejoin_response}")
+    # print(f"number of link status packets : {link_status}")
+    # print(f"number of network report packets : {network_report}")
+    # print(f"number of network update packets : {network_update}")
+    # print(f"number of end device timeout request packets : {edt_request}")
+    # print(f"number of end device timeout response packets : {edt_response}")
+
     print(f"number of rejoin response packets : {rejoin_response}")
-    print(f"number of link status packets : {link_status}")
     print(f"number of network report packets : {network_report}")
+    print(f"number of route reply packets : {route_reply}")
     print(f"number of network update packets : {network_update}")
+    print(f"number of link status packets : {link_status}")
+    print(f"number of route request packets : {route_request}")
+    print(f"number of network status packets : {network_status}")
+    print(f"number of route record packets : {route_record}")
     print(f"number of end device timeout request packets : {edt_request}")
     print(f"number of end device timeout response packets : {edt_response}")
-    print("")
+    print(f"number of leave packets : {leave_1 + leave_2 + leave_3 + len(check_response)}")
+    print(f"number of rejoin request packets : {rejoin_request}")
+    print("======")
     print(sys.argv[1])
   else:
     print("please give me a file")
