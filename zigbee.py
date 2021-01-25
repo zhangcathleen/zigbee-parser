@@ -484,14 +484,14 @@ def parse():
                   
                   continue
 
-
-
-
-
+                
                 a = d_announce[0]
-                b = d_announce[1]
-                c = d_announce[2]
-                d = d_announce[3]
+                try:
+                  b = d_announce[1]
+                  c = d_announce[2]
+                  d = d_announce[3]
+                except IndexError:
+                  pass
 
                 # # ===== network status packets ========
                 # # dst : zc, zr, zed, 0xfffd
@@ -669,72 +669,75 @@ def parse():
                 if len(d_announce) == 0:
                   continue
                 
-                
+                one = zbee.src
+                two = zbee.dst
+                three = wpan.src16
+                four = wpan.dst16
 
                 if zbee.data_len == '2':
                   route_record_3_2.append(frame.number)
                   previous[5] == False
-                  if zbee.src == a:
-                    if wpan.src16 == a:
-                      if wpan.dst16 == b:
+                  if one == a:
+                    if three == a:
+                      if four == '0x00000000':
+                        ab0 = True
+                      elif four == b:
                         ab0 = False
                         ba0 = False
-                      elif wpan.dst16 == '0x00000000':
-                        ab0 = True
-                  elif zbee.src == b:
-                    if wpan.src16 == b:
-                      if wpan.dst16 == '0x00000000':
+                  elif one == b:
+                    if three == b:
+                      if four == '0x00000000':
                         ab0 = False
                         ba0 = True
-                      elif wpan.dst16 == a:
+                      elif four == a:
                         ba0 = False
-                  elif zbee.src != a and zbee.src != b: 
-                    if zbee.src == wpan.src16 and zbee.dst == '0x00000000' and wpan.src16 != wpan.dst16 and wpan.dst16 == da_main:
-                      rra = zbee.src                
-                      rrb = wpan.dst16
+                  elif one != a and one != b: 
+                    if one == three and two == '0x00000000' and three != four and four == da_main:
+                      rra = one                
+                      rrb = four
                 elif zbee.data_len == '4':
                   previous[5] = True
-                  if zbee.src == a:
-                    if wpan.src16 == b:
-                      if wpan.dst16 == '0x00000000':
+                  if one == a:
+                    if three == a:
+                      if four == b or four == '0x00000000':
+                        ab0 = True
+                        network_status_3_2.append(frame.number)
+                      else:
+                        network_status_3_2.append(frame.number)
+                    elif three == b:
+                      if four == '0x00000000':
                         if ab0:
                           network_status_3_3.append(frame.number)
                           # ab0 = False
                         else:
                           route_record_3_3.append(frame.number)
                           previous[5] = False
-                      elif wpan.dst16 == a:
+                      elif four == a:
                         network_status_3_2.append(frame.number)
-                    elif wpan.src16 == a:
-                      if wpan.dst16 == b or wpan.dst16 == '0x00000000':
-                        ab0 = True
-                        network_status_3_2.append(frame.number)
-                      else:
-                        network_status_3_2.append(frame.number)
-                  elif zbee.src == b:
-                    if wpan.src16 == a:
-                      if wpan.dst16 == '0x00000000':
+                  elif one == b:
+                    if three == a:
+                      if four == '0x00000000':
                         if ba0:
                           network_status_3_4.append(frame.number)
                         else:
                           route_record_3_4.append(frame.number)
                           previous[5] = False
-                      if wpan.dst16 == b:
+                      if four == b:
                         network_status_3_2.append(frame.number)
-                    elif wpan.src16 == b:
-                      if wpan.dst16 == '0x00000000':
+                    elif three == b:
+                      if four == '0x00000000':
                         ab0 = False
                         network_status_3_2.append(frame.number)
-                      elif wpan.dst16 == a:
+                      elif four == a:
                         ba0 = True
                         network_status_3_2.append(frame.number)
                       else:
                         network_status_3_2.append(frame.number)
-                  elif zbee.src == da_rando and zbee.dst == '0x00000000' and wpan.src16 == da_main and wpan.dst16 == '0x00000000':
+                  elif one == da_rando and two == '0x00000000' and three == da_main and four == '0x00000000':
                     route_record_3_2.append(frame.number)
                     previous[5] = False
-                  elif zbee.src == rra and wpan.src16 == rrb:
-                    if zbee.dst == '0x00000000' and wpan.dst16 == '0x00000000':
+                  elif one == rra and three == rrb:
+                    if two == '0x00000000' and four == '0x00000000':
                       route_record_3_2.append(frame.number)
                       previous[5] = False
 
