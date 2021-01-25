@@ -717,6 +717,9 @@ def parse():
                           previous[5] = False
                       elif four == a:
                         network_status_3_2.append(frame.number)
+                      elif four == d:
+                        route_record_3_2.append(frame.number)
+                        previous[5] = False
                   elif one == b:
                     if three == a:
                       if four == '0x00000000':
@@ -736,11 +739,29 @@ def parse():
                         network_status_3_2.append(frame.number)
                       else:
                         network_status_3_2.append(frame.number)
-                  elif one == da_rando and two == '0x00000000' and three == da_main and four == '0x00000000':
+                    elif three == d:
+                      if four == '0x00000000':
+                        network_status_3_2.append(frame.number)
+                  
+                  try:
+                    if one == d:
+                      if three == c and four == '0x00000000':
+                        route_record_3_2.append(frame.number)
+                        previous[5] = False
+                        continue
+                  except UnboundLocalError:
+                    pass
+
+                  if one == da_rando and two == '0x00000000' and three == da_main and four == '0x00000000':
                     route_record_3_2.append(frame.number)
                     previous[5] = False
                   elif one == rra and three == rrb:
                     if two == '0x00000000' and four == '0x00000000':
+                      route_record_3_2.append(frame.number)
+                      previous[5] = False
+                elif zbee.data_len == '6':
+                  if one == d:
+                    if three == d and four == '0x00000000':
                       route_record_3_2.append(frame.number)
                       previous[5] = False
 
