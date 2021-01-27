@@ -677,6 +677,10 @@ def parse():
                 three = wpan.src16
                 four = wpan.dst16
 
+                # if frame.number == '4078':
+                #   print(f'{frame.number} [{zbee.data_len}] : {one}, {two} -> {three}, {four}')
+                #   print(f'{a}, {b}, {c}, {d}')
+
                 if zbee.data_len == '2':
                   route_record_3_2.append(frame.number)
                   previous[5] == False
@@ -699,6 +703,8 @@ def parse():
                       rra = one                
                       rrb = four
                 elif zbee.data_len == '4':
+                  # if frame.number == '4078':
+                    # print('4078')
                   previous[5] = True
                   if one == a:
                     if three == a:
@@ -760,7 +766,7 @@ def parse():
                       route_record_3_2.append(frame.number)
                       previous[5] = False
                 elif zbee.data_len == '6':
-                  if one == d:
+                  if one == a:
                     if three == d and four == '0x00000000':
                       route_record_3_2.append(frame.number)
                       previous[5] = False
@@ -777,9 +783,11 @@ def parse():
                 # if elapsed > 1 sec = new device announcement set
                 # if elapsed < 1 sec = same da set
                 t = float(frame.time_epoch)
-                if t - da_time > 60:
+                if t - da_time > 1:
+                  # print(f'{frame.number} : {t} - {da_time} = {t-da_time}')
                   d_announce = [zbee.src]
                 da_time = t
+
 
                 # x = [frame.time_epoch, zbee.src]
                 ab0 = False
@@ -802,6 +810,10 @@ def parse():
                 else:
                   da_rando = ""
                   d_announce.append(ws)
+
+
+                # if float(frame.number) > 4000:
+                #   print(f'{frame.number} : {d_announce}')
 
                 previous = [0, 0, 0, 0, 0, None]
                 continue
