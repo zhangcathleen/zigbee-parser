@@ -61,49 +61,68 @@ def main():
     f.write(f"not present\n")
     f.close()
 
-    x = ""
-    while 1 == 1:
-        x = input()
-        # if x in ns_3_1:
-        #     print("network status 3 1")
-        #     ns_3_1.remove(x)
-        # elif x in ns_3_2:
-        #     print("network status 3 2")
-        #     ns_3_2.remove(x)
-        # elif x in ns_3_3:
-        #     print("network status 3 3")
-        #     ns_3_3.remove(x)
-        # elif x in ns_3_4:
-        #     print("network status 3 4")
-        #     ns_3_4.remove(x)
-        if x in rr_3_1:
-            # print("route record 3 1")
-            rr_3_1.remove(x)
-        elif x in rr_3_2:
-            # print("route record 3 4")
-            rr_3_2.remove(x)
-        elif x in rr_3_3:
-            # print("route record 3 3")
-            rr_3_3.remove(x)
-        elif x in rr_3_4:
-            # print("route record 3 4 ")
-            rr_3_4.remove(x)
-        elif x == "q":
-            break
-        elif x == "a":
-            print(ns_3_1)
-        else:
-            # print("not present")
-            f = open("test.txt", "a")
-            f.write(f"{x}\n")
-            f.close()
+    x = input('input:\n   \'a\' for network status\n   \'b\' for route record\n')
+    ns = None
+
+    if x == 'a':
+        ns = True
+        while 1 == 1:
+            x = input()
+            if x in ns_3_1:
+                # print("network status 3 1")
+                ns_3_1.remove(x)
+            elif x in ns_3_2:
+                # print("network status 3 2")
+                ns_3_2.remove(x)
+            elif x in ns_3_3:
+                # print("network status 3 3")
+                ns_3_3.remove(x)
+            elif x in ns_3_4:
+                # print("network status 3 4")
+                ns_3_4.remove(x)
+            elif x == "q":
+                print('for results: cat test.txt\n')
+                break
+            else:
+                # print("not present")
+                f = open("test.txt", "a")
+                f.write(f"{x}\n")
+                f.close()
+
+    if x == 'b':
+        ns = False
+        while 1 == 1:
+            if x in rr_3_1:
+                # print("route record 3 1")
+                rr_3_1.remove(x)
+            elif x in rr_3_2:
+                # print("route record 3 4")
+                rr_3_2.remove(x)
+            elif x in rr_3_3:
+                # print("route record 3 3")
+                rr_3_3.remove(x)
+            elif x in rr_3_4:
+                # print("route record 3 4 ")
+                rr_3_4.remove(x)
+            elif x == "q":
+                break
+            else:
+                # print("not present")
+                f = open("test.txt", "a")
+                f.write(f"{x}\n")
+                f.close()
 
     # joined = ns_3_1 + ns_3_2 + ns_3_3 + ns_3_4 + rr_3_4 + rr_3_3 + rr_3_2 + rr_3_1
-    # joined = ns_3_1 + ns_3_2 + ns_3_3 + ns_3_4
-    joined = rr_3_1 + rr_3_2 + rr_3_3 + rr_3_4
+    joined_ns = ns_3_1 + ns_3_2 + ns_3_3 + ns_3_4
+    joined_rr = rr_3_1 + rr_3_2 + rr_3_3 + rr_3_4
 
     f = open("test.txt", "a")
     f.write("not accounted\n")
+    if ns:
+        joined = joined_ns
+    else:
+        joined = joined_rr
+
     for x in joined:
         f.write(f"{x}\n")
     f.close()
