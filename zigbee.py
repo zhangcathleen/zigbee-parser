@@ -96,8 +96,8 @@ def parse():
   # # keeps track of d_announce times (time : zbee src)
   # d_time = []
 
-  # most recent route record (identified by device announcement) - WPAN SRC
-  last_rr = ""
+  # # most recent route record (identified by device announcement) - WPAN SRC
+  # last_rr = ""
 
   # mapping the network id w/ mac address
   # network id : mac address
