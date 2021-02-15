@@ -13,13 +13,6 @@ import pyshark
 import time
 
 
-# TODO : progress bar instead of printing out all of the frame numbers
-#       instead, print the results into a file
-#       file will only be a thing if the entire thing finishes? Or maybe I should be able to let it go until it parses through
-# TODO : end device timeout response
-# TODO : end device timeour response
-
-
 # start ------------------------------------------------------------------------
 
 
@@ -39,6 +32,21 @@ def start():
 '''
 def finish():
   print(f"\n\n========\ntime it took to run this command: {(time.process_time() - start_time)/60} min\n========\n")
+
+
+# get_letter(addr, da)
+# returns the letter which is associated with the device announcement address
+
+def get_letter(a, da):
+  i = 1
+  while i < 4:
+    if a == da[i][0]:
+      return da[i][1]
+    i += 1
+  return None
+
+
+
 
 # parse ------------------------------------------------------------------------
 
@@ -72,7 +80,9 @@ def parse():
   # # a list => d_announce.append(x)
   # d_announce = [0, 0]
 
-  # keeps track of the device announcement + devices
+  # keeps track of the device announcement devices + position in the network
+  # [(address, <letter>), (address, <letter>)]
+  # letter : a, b, c, d
   d_announce = []
 
   # keeps track of the previous packets for a -> b 0 (4)
@@ -180,6 +190,13 @@ def parse():
 
   # keeps track of the last device announcement time
   da_time = 0
+
+  # keeps track which letter (position in network) the da devices are adding
+  da_letter = ""
+
+  # keeps track of previous rr or ns
+  # [zed_src, wpan_src, wpan_dst, len - float, rr/]
+  prev_rr = []
 
 
 #  # frames that might be leave packets, but need the ZED
@@ -484,174 +501,7 @@ def parse():
                   
                   continue
 
-                
-                a = d_announce[0]
-                try:
-                  b = d_announce[1]
-                except IndexError:
-                  b = False
-                try:
-                  c = d_announce[2]
-                  d = d_announce[3]
-                except IndexError:
-                  pass
-
-                # # ===== network status packets ========
-                # # dst : zc, zr, zed, 0xfffd
-                # # src : zc, zr, zed
-                
-                # if (zbee.data_len == '2' or zbee.data_len == '4') and zbee.dst != '0x00000000' and wpan.src16 != zbee.src and (zbee.dst == '0x0000fffd' or zbee_dst in zbee_ed):
-                #   # 1
-                #   network_status = network_status + 1
-                #   network_status_1.append(frame.number)
-                #   # print(f'ns packet 1 : {frame.number} : {zbee.dst}')
-                #   #csv_packet = 'network status packet'
-
-                #   if zbee.src != '0x00000000':
-                #     #zbee_red.add(zbee.src)
-                #     #if zbee.dst != '0x0000fffd':
-                #       #if zbee.dst != '0x00000000':
-                #         # zbee_red.add(zbee.dst)
-                #     if zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-
-                #   elif zbee.src == '0x00000000':
-                #     zbee_c.add(zbee.src64)
-                #     if zbee.dst != '0x0000fffd':
-                #       if zbee.src_route == True:
-                #         zbee_r.add(zbee.dst)
-                #       elif zbee.src_route == False:
-                #         zbee_ed.add(zbee.dst)
-
-                # if zbee.data_len == '4' and wpan.src16 == zbee.src:
-                #   # 2
-                #   network_status = network_status + 1
-                #   network_status_2.append(frame.number)
-                #   # print(f'ns packet 2 wpan src : {frame.number}')
-                #   #csv_packet = 'network status packet'
-                  
-                #   if zbee.src != '0x00000000':
-                #     #zbee_red.add(zbee.src)
-                #     #if zbee.dst != '0x0000fffd':
-                #       #if zbee.dst != '0x00000000':
-                #         #zbee_red.add(zbee.dst)
-                #     if zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-
-                #   elif zbee.src == '0x00000000':
-                #     zbee_c.add(zbee.src64)
-                #     if zbee.dst != '0x0000fffd':
-                #       if zbee.src_route == True:
-                #         zbee_r.add(zbee.dst)
-                #       elif zbee.src_route == False:
-                #         zbee_ed.add(zbee.dst)
-                  
-                #   continue
-                
-                # if (zbee.data_len == '2') and (wpan.src16 != zbee.src):
-                #   # 3
-                #   network_status = network_status + 1
-                #   network_status_4.append(frame.number)
-                #   # print(f'ns packet 3 : {frame.number}')
-                #   #csv_packet = 'network status packet'
-  
-                #   if zbee.src != '0x00000000':
-                #     #zbee_red.add(zbee.src)
-                #     #if zbee.dst != '0x0000fffd':
-                #       #if zbee.dst != '0x00000000':
-                #       # zbee_red.add(zbee.dst)
-                #     if zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-
-                #   elif zbee.src == '0x00000000':
-                #     zbee_c.add(zbee.src64)
-                #     if zbee.dst != '0x0000fffd':
-                #       if zbee.src_route == True:
-                #         zbee_r.add(zbee.dst)
-                #       elif zbee.src_route == False:
-                #         zbee_ed.add(zbee.dst)
-
-                #   continue
-
-
-                # # ===== route record packets ===========
-                # # dst : zc, zr
-                # # src : zc, zr, zed
-
-                
-                # if zbee.dst != '0x0000fffc':
-                #   if ((zbee.data_len == '6') or (zbee.data_len == '8') or (zbee.data_len == '10')):
-                #     # 1 route record
-                #     route_record = route_record + 1
-                #     route_record_1.append(frame.number)
-                #     #csv_packet = 'route record packet'
-                    
-                #     #if zbee.src != '0x00000000':
-                #     #  zbee_red.add(zbee.src)
-                #     if zbee.src == '0x00000000':
-                #       zbee_c.add(zbee.src64)
-                    
-                #     if zbee.dst != '0x00000000':
-                #       zbee_r.add(zbee.dst)
-                #     elif zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-                    
-                #     continue
-                   
-                #   if zbee.ext_dst == '1' and (zbee.data_len != '2') and (zbee.data_len != '4') and (zbee.data_len != '6') and (zbee.data_len != '8') and (wpan.src16 != zbee.src):
-                #     # 2 route record
-                #     route_record = route_record + 1
-                #     route_record_2.append(frame.number)
-                #     #csv_packet = 'route record packet'
-                    
-                #     # if zbee.src != '0x00000000':
-                #     #  zbee_red.add(zbee.src)
-                #     if zbee.src == '0x00000000':
-                #       zbee_c.add(zbee.src64)
-                    
-                #     if zbee.dst != '0x00000000':
-                #       zbee_r.add(zbee.dst)
-                #     elif zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-                    
-                #     continue
-                      
-                #   a = d_announce[0]
-                #   b = d_announce[1]
-
-                #   if zbee.ext_dst == '1' and zbee.dst != '0x0000fffd' and wpan.src16 == zbee.src and zbee.data_len == '2':
-                #     # 3 route record
-                #     route_record = route_record + 1
-                #     route_record_4.append(frame.number)
-                #     #csv_packet = 'route record packet'
-                    
-                #     previous[5] == False
-                #     if zbee.src == a:
-                #       if wpan.src16 == a:
-                #         if wpan.dst16 == b:
-                #           ab0 = False
-                #         elif wpan.dst16 == '0x00000000':
-                #           ab0 = True
-                #     elif zbee.src == b:
-                #       if wpan.src16 == b:
-                #         if wpan.dst16 == '0x00000000':
-                #           ab0 = False
-                #           ba0 = True
-                #         elif wpan.dst16 == a:
-                #           ba0 = False
-
-                #     #if zbee.src != '0x00000000':
-                #     #  zbee_red.add(zbee.src)
-                #     if zbee.src == '0x00000000':
-                #       zbee_c.add(zbee.src64)
-                    
-                #     if zbee.dst != '0x00000000':
-                #       zbee_r.add(zbee.dst)
-                #     elif zbee.dst == '0x00000000':
-                #       zbee_c.add(zbee.dst64)
-                    
-                #     continue
-
+               
 
                 # ===== network status packets ========
                 # dst : zc, zr, zed, 0xfffd
@@ -660,91 +510,155 @@ def parse():
                 # dst : zc, zr
                 # src : zc, zr, zed
 
+                 
+                # setting variables for the device announcement nodes (esp w intermediary nodes)
+                a = d_announce[0][0]
+                try:
+                  b = d_announce[1][0]
+                except IndexError:
+                  b = False
+                try:
+                  c = d_announce[2][0]
+                  d = d_announce[3][0]
+                except IndexError:
+                  pass
+
+
+                # checking if this was the same as the previou packet
                 if zbee.src == previous[0] and zbee.dst == previous[1] and wpan.src16 == previous[2] and wpan.dst16 == previous[3] and zbee.data_len == previous[4]:
-                  if previous[5]:
+                  if previous[5]: # true = network status
                     network_status_3_1.append(frame.number)
                     continue
-                  else:
+                  else: # false = route record
                     route_record_3_1.append(frame.number)
                     continue
                 
-                previous = [zbee.src, zbee.dst, wpan.src16, wpan.dst16, zbee.data_len, None]
+
+                # getting the letter associated w the packet's 
+                try:
+                  first = (zbee.src, get_letter(zbee.src, d_a))
+                  second = (zbee.dst, get_letter(zbee.dst, d_a))
+                  third = (wpan.src16, get_letter(wpan.src16, d_a))
+                  fourth = (wpan.dst16, get_letter(wpan.dst16, d_a))
+                except:
+                  pass
+
+                # it's not the same as the previous packet (or it would have continued)
+                # resetting prev to this packet
+                previous = [first, second, third, fourth, zbee.data_len, None]
+
+                # # setting prev route record packet to None/empty
+                # # true = network status
+                # # false = route record
+                # # [(zbee.src, "letter"), (wpan.src, "letter"), (wpan.dst, "letter"), len, t/f]
+                # prev_rr = []
+
+                # only applies at the very beginning (if there were no device announcement packets yet)
                 if len(d_announce) == 0:
                   continue
                 
+                # setting variables for easey use
                 one = zbee.src
                 two = zbee.dst
                 three = wpan.src16
                 four = wpan.dst16
-
+                z_len = float(zbee.data_len)
+                
                 # if frame.number == '4078':
                 #   print(f'{frame.number} [{zbee.data_len}] : {one}, {two} -> {three}, {four}')
                 #   print(f'{a}, {b}, {c}, {d}')
 
-                if zbee.data_len == '2':
+                if z_len == 2:
                   route_record_3_2.append(frame.number)
                   previous[5] == False
+                  prev_rr[3] = [z_len]
+
                   if one == a:
                     if three == a:
-                      if four == '0x00000000':
+                      # a > a0
+                      if four == '0x00000000': 
                         ab0 = True
+                      # a > ab
                       elif four == b:
                         ab0 = False
                         ba0 = False
+                      
+                    elif three == b:
+                      # a > bd
+                      if four == d
+                  
                   elif one == b:
                     if three == b:
+                      # b > b0
                       if four == '0x00000000':
                         ab0 = False
                         ba0 = True
+                      # b > ba
                       elif four == a:
                         ba0 = False
+                  
+                  # for when packets kinda get messed up
                   elif one != a and one != b: 
                     if one == three and two == '0x00000000' and three != four and four == da_main:
                       rra = one                
                       rrb = four
-                elif zbee.data_len == '4':
-                  # if frame.number == '4078':
-                    # print('4078')
+                  
+                elif z_len == 4:
                   previous[5] = True
+
                   if one == a:
+
                     if three == a:
+                      # a > a b||0
                       if four == b or four == '0x00000000':
                         ab0 = True
                         network_status_3_2.append(frame.number)
-                      else:
+                      else: # a > a
                         network_status_3_2.append(frame.number)
+                        
                     elif three == b:
-                      if four == '0x00000000':
+                      # a > b0
+                      if four == '0x00000000': 
                         if ab0:
                           network_status_3_3.append(frame.number)
                           # ab0 = False
                         else:
                           route_record_3_3.append(frame.number)
                           previous[5] = False
-                      elif four == a:
+                      # a > aa
+                      elif four == a: 
                         network_status_3_2.append(frame.number)
                       # elif four == d:
                       #   route_record_3_2.append(frame.number)
                       #   previous[5] = False
+
                   elif one == b:
+
                     if three == a:
+                      # b > a0
                       if four == '0x00000000':
                         if ba0:
                           network_status_3_4.append(frame.number)
                         else:
                           route_record_3_4.append(frame.number)
                           previous[5] = False
-                      if four == b:
+                      # b > ab
+                      elif four == b:
                         network_status_3_2.append(frame.number)
+                        
                     elif three == b:
+                      # b > b0
                       if four == '0x00000000':
                         ab0 = False
                         network_status_3_2.append(frame.number)
+                      # b > ba
                       elif four == a:
                         ba0 = True
                         network_status_3_2.append(frame.number)
+                      # b > b
                       else:
                         network_status_3_2.append(frame.number)
+
                     # elif three == d:
                     #   if four == '0x00000000':
                     #     network_status_3_2.append(frame.number)
@@ -758,6 +672,7 @@ def parse():
                   # except UnboundLocalError:
                   #   pass
 
+                  # for if the packets are messed up w the device announcement?
                   if one == da_rando and two == '0x00000000' and three == da_main and four == '0x00000000':
                     route_record_3_2.append(frame.number)
                     previous[5] = False
@@ -785,8 +700,16 @@ def parse():
                 t = float(frame.time_epoch)
                 if t - da_time > 1:
                   # print(f'{frame.number} : {t} - {da_time} = {t-da_time}')
-                  d_announce = [zbee.src]
+                  d_announce = [(zbee.src, "a")]
                 da_time = t
+
+                # determines the letter (part of network) for da devices
+                if len(d_announce) == 1:
+                  da_letter = "b"
+                elif len(d_announce) == 2:
+                  da_letter = "c"
+                elif len(d_announce) == 3:
+                  da_letter = "d"
 
 
                 # x = [frame.time_epoch, zbee.src]
@@ -806,10 +729,10 @@ def parse():
                     continue
                   else:
                     da_rando = ""
-                    d_announce.append(wd)
+                    d_announce.append((wd, da_letter))
                 else:
                   da_rando = ""
-                  d_announce.append(ws)
+                  d_announce.append((ws, da_letter))
 
 
                 # if float(frame.number) > 4000:
